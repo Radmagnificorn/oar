@@ -1,0 +1,610 @@
+{
+  "area": "library",
+  "characters": [
+    "alex",
+    "zara",
+    "sylvia"
+  ],
+  "events": [
+    {
+      "eventType": "SpriteHideShowEvent",
+      "actorType": "sprite",
+      "async": false,
+      "target": "sylvia",
+      "properties": {
+        "mode": "show"
+      },
+      "advanceType": "auto"
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "Hey guys, I have some work for you.",
+        "portrait": "default"
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "name": "point",
+        "loop": false,
+        "flip": false,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "This is an especially interesting case if you're into... NECK-romancy",
+        "portrait": "default"
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "zara",
+      "msDelay": 0,
+      "properties": {
+        "name": "sitting",
+        "loop": false,
+        "flip": true,
+        "shadow": false
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "zara",
+      "msDelay": 0,
+      "properties": {
+        "text": "I'll bite... I am a necromancer, and I'm curious why you said it weird",
+        "portrait": "default",
+        "flip": true
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "name": "shrug",
+        "loop": false,
+        "flip": false,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "It's because this one involves a headless ghost!",
+        "portrait": "default",
+        "flip": false,
+        "portriat": "default"
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "name": "arms-crossed",
+        "loop": false,
+        "flip": false,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "My source says he recently started causing trouble at the cemetery",
+        "portrait": "default",
+        "flip": false,
+        "portriat": "default"
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "name": "gesture",
+        "loop": false,
+        "flip": false,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "He keeps moving things around and throwing rocks at visitors",
+        "portrait": "default",
+        "flip": false,
+        "portriat": "default"
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "A spirit that possesses the ability to interact with physical objects...",
+        "portrait": "default",
+        "flip": false,
+        "portriat": "default"
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "name": "arms-crossed",
+        "loop": false,
+        "flip": false,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "... is extremely unusual",
+        "portrait": "default",
+        "flip": false,
+        "portriat": "default"
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "name": "sit-gesture",
+        "loop": false,
+        "flip": true,
+        "shadow": false
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "text": "Wait, then how is it that Ghost Loaf can interact with things?",
+        "portrait": "default",
+        "flip": true
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "name": "sitting",
+        "loop": false,
+        "flip": true,
+        "shadow": false
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "input",
+      "target": "zara",
+      "msDelay": 0,
+      "properties": {
+        "name": "sit-look-at-camera",
+        "loop": false,
+        "flip": true,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "input",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "name": "sitting",
+        "loop": false,
+        "flip": true,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "zara",
+      "msDelay": 0,
+      "properties": {
+        "text": "Because he's not really a ghost, he's a ghost themed bread.",
+        "portrait": "default",
+        "flip": true
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "input",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "name": "sit-gesture",
+        "loop": false,
+        "flip": true,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "text": "I don't even know... what???",
+        "portrait": "default",
+        "flip": true
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "input",
+      "target": "zara",
+      "msDelay": 0,
+      "properties": {
+        "name": "sitting",
+        "loop": false,
+        "flip": true,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "Anyway, there is an artifact that grants spirits these very abilities.",
+        "portrait": "default",
+        "flip": false
+      }
+    },
+    {
+      "eventType": "SpritePlayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "sprite",
+      "advanceType": "auto",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "name": "gesture",
+        "loop": false,
+        "flip": false,
+        "shadow": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "It is a silver orb, known as the \"Tactus Spirituum\"",
+        "portrait": "default",
+        "flip": false
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "sylvia",
+      "msDelay": 0,
+      "properties": {
+        "text": "... and it has gone missing from the collection",
+        "portrait": "default",
+        "flip": false
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "text": "Are we sure that this spirit has the artifact?",
+        "portrait": "default",
+        "flip": true
+      }
+    },
+    {
+      "eventType": "DialogSayEvent",
+      "advanceOptions": [
+        "input",
+        "auto",
+        "async",
+        "timer"
+      ],
+      "actorType": "dialog",
+      "advanceType": "input",
+      "target": "alex",
+      "msDelay": 0,
+      "properties": {
+        "text": "What if he just learned how to move stuff like Patrick Swayze in Ghost?",
+        "portrait": "default",
+        "flip": true
+      }
+    },
+    {
+      "eventType": "SpriteHideShowEvent",
+      "actorType": "sprite",
+      "async": false,
+      "target": "sylvia",
+      "properties": {
+        "mode": "hide"
+      },
+      "advanceType": "auto"
+    }
+  ],
+  "initialState": {
+    "camera": {
+      "posX": 0,
+      "posY": 0
+    },
+    "characters": [
+      {
+        "name": "alex",
+        "state": {
+          "posX": 201,
+          "posY": 95,
+          "visible": true,
+          "flipped": true,
+          "sprite": "sitting",
+          "shadow": false
+        }
+      },
+      {
+        "name": "zara",
+        "state": {
+          "posX": 142,
+          "posY": 88,
+          "visible": true,
+          "flipped": true,
+          "sprite": "sit-with-phone",
+          "shadow": false
+        }
+      },
+      {
+        "name": "sylvia",
+        "state": {
+          "posX": 77,
+          "posY": 100,
+          "visible": false,
+          "flipped": false,
+          "sprite": "arms-crossed",
+          "shadow": true
+        }
+      }
+    ]
+  },
+  "name": "the library"
+}
