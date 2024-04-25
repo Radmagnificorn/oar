@@ -36583,7 +36583,7 @@ var AreaDto = class {
 // src/environments/environment.ts
 var environment = {
   production: true,
-  apiUrl: ""
+  apiUrl: "/oar"
 };
 
 // src/app/player/player.asset.service.ts
@@ -36740,7 +36740,7 @@ _PlayerComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type:
     });
     \u0275\u0275elementEnd();
   }
-}, styles: ['\n\n@font-face {\n  font-family: "pixelfont";\n  src: url("./media/KH-Dot-Kagurazaka-12-3E6QYCUE.ttf") format("truetype");\n}\n/*# sourceMappingURL=player.component-N3PEL4V4.css.map */'] });
+}, styles: ['\n\n@font-face {\n  font-family: "pixelfont";\n  src: url("./media/KH-Dot-Kagurazaka-12-3E6QYCUE.ttf") format("truetype");\n}'] });
 var PlayerComponent = _PlayerComponent;
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PlayerComponent, { className: "PlayerComponent", filePath: "src\\app\\player\\player.component.ts", lineNumber: 14 });
@@ -36779,4 +36779,3 @@ var AppComponent = _AppComponent;
 
 // src/main.ts
 bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));
-//# sourceMappingURL=main-REPELYI6.js.map
