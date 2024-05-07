@@ -35281,8 +35281,92 @@ var InitialSceneState = class {
       posY: 0
     };
     this.characters = [];
+    this.props = [];
   }
 };
+
+// ../editor-ui/src/app/player/model/draw-utils.ts
+function drawFilledEllipse(ctx, center_x, center_y, width, height) {
+  ctx.beginPath();
+  ctx.ellipse(center_x, center_y, width / 2, height / 2, 0, 0, 2 * Math.PI);
+  ctx.fillStyle = "black";
+  ctx.fill();
+}
+function drawShadow(ctx, center_x, center_y, width, height, opacity) {
+  const ogAlpha = ctx.globalAlpha;
+  const ogShadowColor = ctx.shadowColor;
+  const ogShadowBlur = ctx.shadowBlur;
+  ctx.shadowColor = "black";
+  ctx.shadowBlur = 5;
+  ctx.fillStyle = "black";
+  ctx.globalAlpha = opacity;
+  drawFilledEllipse(ctx, center_x, center_y, width, height);
+  ctx.globalAlpha = ogAlpha;
+  ctx.shadowColor = ogShadowColor;
+  ctx.shadowBlur = ogShadowBlur;
+}
+function drawFlippedImage(img, x, y, context3) {
+  context3.save();
+  context3.translate(x + img.width / 2, y + img.height / 2);
+  context3.scale(-1, 1);
+  context3.drawImage(img, -img.width / 2, -img.height / 2);
+  context3.restore();
+}
+function fadeIn(obj) {
+  return __async(this, null, function* () {
+    obj.visible = true;
+    for (obj.opacity = 0; obj.opacity < 1; obj.opacity += 0.1) {
+      yield obj.onUpdateEvent();
+    }
+    obj.opacity = 1;
+  });
+}
+function fadeOut(obj) {
+  return __async(this, null, function* () {
+    for (obj.opacity = 1; obj.opacity > 0; obj.opacity -= 0.1) {
+      yield obj.onUpdateEvent();
+    }
+    obj.opacity = 0;
+    obj.visible = false;
+  });
+}
+function move(obj, xPos, yPos, mode, time = 1e3, animate = true) {
+  return __async(this, null, function* () {
+    if (!animate)
+      mode = "none";
+    switch (mode) {
+      case "fade":
+        yield obj.fadeOut();
+        obj.location.x = xPos;
+        obj.location.y = yPos;
+        yield obj.fadeIn();
+        break;
+      case "linear":
+        yield moveLinear(obj, xPos, yPos, time);
+        break;
+      default:
+        obj.location.x = xPos;
+        obj.location.y = yPos;
+    }
+  });
+}
+function moveLinear(obj, xPos, yPos, ms) {
+  return __async(this, null, function* () {
+    const startX = obj.location.x;
+    const startY = obj.location.y;
+    const dx = xPos - startX;
+    const dy = yPos - startY;
+    const startTime = Date.now();
+    while (Date.now() - startTime < ms) {
+      const progress = (Date.now() - startTime) / ms;
+      obj.location.x = startX + dx * progress;
+      obj.location.y = startY + dy * progress;
+      yield obj.onUpdateEvent();
+    }
+    obj.location.x = xPos;
+    obj.location.y = yPos;
+  });
+}
 
 // ../editor-ui/src/app/player/model/vnevent.ts
 var VNEvent = class {
@@ -35327,13 +35411,16 @@ var SpriteMoveEvent = class extends VNEvent {
     this.properties = {
       xPos: 0,
       yPos: 0,
-      method: ""
+      method: "",
+      time: 1e3
     };
   }
   execute(scene, animate) {
     return __async(this, null, function* () {
-      const target = scene.characters.get(this.target);
-      yield target?.move(this.properties.xPos, this.properties.yPos, "fade", animate);
+      const target = scene.findObject(this.target);
+      if (target) {
+        yield move(target, this.properties.xPos, this.properties.yPos, this.properties.method, this.properties.time, animate);
+      }
     });
   }
 };
@@ -35346,7 +35433,7 @@ var SpriteHideShowEvent = class extends VNEvent {
   }
   execute(scene, animate) {
     return __async(this, null, function* () {
-      const target = scene.characters.get(this.target);
+      const target = scene.findObject(this.target);
       if (!target)
         return;
       if (this.properties.mode === "show") {
@@ -35412,7 +35499,7 @@ var VNPlayer = class {
     this.bufferCtx = this.bufferCanvas.getContext("2d");
   }
   playSequence() {
-    return __async(this, arguments, function* (events = this.activeScene?.events, animate = true, waitOnClick = true) {
+    return __async(this, arguments, function* (events = this.activeScene?.events, animate = true) {
       console.log("playing events");
       if (!events)
         return;
@@ -35431,7 +35518,7 @@ var VNPlayer = class {
               });
               break;
             case "timer":
-              yield this.playEvent(vnEvent, animate);
+              yield new Promise((resolve) => setTimeout(resolve, vnEvent.msDelay));
               break;
           }
         }
@@ -35468,6 +35555,7 @@ var VNPlayer = class {
     return __async(this, null, function* () {
       if (!this.activeScene)
         return;
+      this.activeScene?.gameObjects.sort((a, b) => a.zIndex - b.zIndex);
       for (const go of this.activeScene.gameObjects) {
         go.onUpdate();
       }
@@ -35513,34 +35601,6 @@ var RFArea = class {
     this.layers = [];
   }
 };
-
-// ../editor-ui/src/app/player/model/draw-utils.ts
-function drawFilledEllipse(ctx, center_x, center_y, width, height) {
-  ctx.beginPath();
-  ctx.ellipse(center_x, center_y, width / 2, height / 2, 0, 0, 2 * Math.PI);
-  ctx.fillStyle = "black";
-  ctx.fill();
-}
-function drawShadow(ctx, center_x, center_y, width, height, opacity) {
-  const ogAlpha = ctx.globalAlpha;
-  const ogShadowColor = ctx.shadowColor;
-  const ogShadowBlur = ctx.shadowBlur;
-  ctx.shadowColor = "black";
-  ctx.shadowBlur = 5;
-  ctx.fillStyle = "black";
-  ctx.globalAlpha = opacity;
-  drawFilledEllipse(ctx, center_x, center_y, width, height);
-  ctx.globalAlpha = ogAlpha;
-  ctx.shadowColor = ogShadowColor;
-  ctx.shadowBlur = ogShadowBlur;
-}
-function drawFlippedImage(img, x, y, context3) {
-  context3.save();
-  context3.translate(x + img.width / 2, y + img.height / 2);
-  context3.scale(-1, 1);
-  context3.drawImage(img, -img.width / 2, -img.height / 2);
-  context3.restore();
-}
 
 // ../editor-ui/node_modules/rxjs/dist/esm/internal/util/isFunction.js
 function isFunction3(value) {
@@ -36158,11 +36218,12 @@ var AnonymousSubject2 = class extends Subject2 {
   }
 };
 
-// ../editor-ui/src/app/player/model/vn-player-component.ts
+// ../editor-ui/src/app/player/model/game-object.ts
 var GameObject = class {
   constructor() {
     this.updateSubject = new Subject2();
     this.location = { x: 0, y: 0 };
+    this.zIndex = 0;
   }
   get size() {
     return { height: 0, width: 0 };
@@ -36234,39 +36295,14 @@ var RFCharacter = class extends GameObject {
       }
     });
   }
-  move(xPos, yPos, mode, animate = true) {
-    return __async(this, null, function* () {
-      if (!animate)
-        mode = "none";
-      switch (mode) {
-        case "fade":
-          yield this.fadeOut();
-          this.location.x = xPos;
-          this.location.y = yPos;
-          yield this.fadeIn();
-          break;
-        default:
-          this.location.x = xPos;
-          this.location.y = yPos;
-      }
-    });
-  }
   fadeOut() {
     return __async(this, null, function* () {
-      for (this.opacity = 1; this.opacity > 0; this.opacity -= 0.1) {
-        yield this.onUpdateEvent();
-      }
-      this.opacity = 0;
-      this.visible = false;
+      return fadeOut(this);
     });
   }
   fadeIn() {
     return __async(this, null, function* () {
-      this.visible = true;
-      for (this.opacity = 0; this.opacity < 1; this.opacity += 0.1) {
-        yield this.onUpdateEvent();
-      }
-      this.opacity = 1;
+      return fadeIn(this);
     });
   }
   onRender(ctx, offset = { x: 0, y: 0 }) {
@@ -36385,6 +36421,70 @@ var eventClassMap = /* @__PURE__ */ new Map([
   [CameraPanEvent.name, CameraPanEvent]
 ]);
 
+// ../editor-ui/src/app/player/model/rf-prop.ts
+var RFProp = class extends GameObject {
+  get size() {
+    const img = this.activeSprite?.getImage() || new Image();
+    return {
+      height: img.naturalHeight,
+      width: img.naturalWidth
+    };
+  }
+  constructor(name) {
+    super();
+    this.type = "Prop";
+    this.sprites = /* @__PURE__ */ new Map();
+    this.visible = true;
+    this.flipped = false;
+    this.opacity = 1;
+    this.name = name;
+  }
+  setActiveSprite(sprite) {
+    this.activeSprite = this.sprites.get(sprite);
+  }
+  playSprite(sprite, loop = false, animate = true) {
+    return __async(this, null, function* () {
+      this.setActiveSprite(sprite);
+      if (!this.activeSprite)
+        return;
+      if (!animate || this.activeSprite.images.length < 1 || this.activeSprite.fps === 0) {
+        this.activeSprite.imageIndex = this.activeSprite.images.length - 1;
+        return;
+      }
+      this.activeSprite.play(loop);
+      while (this.activeSprite.playing) {
+        yield this.onUpdateEvent();
+      }
+    });
+  }
+  fadeOut() {
+    return __async(this, null, function* () {
+      return fadeOut(this);
+    });
+  }
+  fadeIn() {
+    return __async(this, null, function* () {
+      return fadeIn(this);
+    });
+  }
+  onRender(ctx, offset = { x: 0, y: 0 }) {
+    if (!ctx || !this.activeSprite || !this.visible)
+      return Promise.resolve();
+    const ogAlpha = ctx.globalAlpha;
+    ctx.globalAlpha = this.opacity;
+    if (this.flipped) {
+      drawFlippedImage(this.activeSprite.getImage(), this.location.x + offset.x, this.location.y + offset.y, ctx);
+    } else {
+      ctx.drawImage(this.activeSprite.getImage(), this.location.x + offset.x, this.location.y + offset.y);
+    }
+    ctx.globalAlpha = ogAlpha;
+    return Promise.resolve();
+  }
+  get spriteList() {
+    return [...this.sprites.keys()];
+  }
+};
+
 // ../editor-ui/src/app/player/model/dataUtils.ts
 function vnEventDtoToVnEvent(dto) {
   let EventClass = eventClassMap.get(dto.eventType);
@@ -36395,7 +36495,8 @@ function vnEventDtoToVnEvent(dto) {
     newEvent = new VNEvent();
   }
   newEvent.target = dto.target;
-  newEvent.advanceType = dto.advanceType || "user";
+  newEvent.advanceType = dto.advanceType || "input";
+  newEvent.msDelay = dto.msDelay || 1e3;
   newEvent.properties = dto.properties;
   return newEvent;
 }
@@ -36417,6 +36518,7 @@ var DialogBox = class extends GameObject {
     this.flipped = false;
     this.displayName = "";
     this.rowSpacing = 15;
+    this.textOpacity = 0;
   }
   say(name, text, portrait = null, flip, animate = true) {
     return __async(this, null, function* () {
@@ -36447,6 +36549,16 @@ var DialogBox = class extends GameObject {
       this.visible = true;
     });
   }
+  fadeTextIn() {
+    return __async(this, null, function* () {
+      this.textOpacity = 0;
+      while (this.textOpacity < 1) {
+        this.textOpacity += 0.2;
+        yield this.onUpdateEvent();
+      }
+      this.textOpacity = 1;
+    });
+  }
   onRender(ctx) {
     return __async(this, null, function* () {
       if (this.visible) {
@@ -36473,16 +36585,20 @@ var DialogBox = class extends GameObject {
     });
   }
   drawText(name, text, x, width, ctx) {
-    const nameY = this.y + 15;
+    const nameY = this.y + 13;
     const row1Y = nameY + this.rowSpacing;
     const row2Y = row1Y + this.rowSpacing;
     let row1 = [];
     let row2 = [];
-    for (const word of text.split(" ")) {
-      if (ctx.measureText(`${row1.join(" ")} ${word}`).width < width && row2.length === 0) {
-        row1.push(word);
+    const wholeText = this.text.split(" ");
+    const visibleText = this.displayText.split(" ");
+    for (let i = 0; i < visibleText.length; i++) {
+      const visWord = visibleText[i];
+      const ogWord = wholeText[i];
+      if (ctx.measureText(`${row1.join(" ")} ${ogWord}`).width < width && row2.length === 0) {
+        row1.push(visWord);
       } else {
-        row2.push(word);
+        row2.push(visWord);
       }
     }
     ctx.fillStyle = "gray";
@@ -36533,17 +36649,21 @@ var Camera = class extends GameObject {
 // ../editor-ui/src/app/player/model/rf-scene.ts
 var RFScene = class {
   get actors() {
-    return [...this.characters.values(), this.camera, this.area].filter((a) => a !== null);
+    return [...this.characters.values(), ...this.props.values(), this.camera, this.area].filter((a) => a !== null);
   }
-  constructor(characters, area, events, initialState) {
+  constructor(characters, area, props, events, initialState) {
     this.characters = /* @__PURE__ */ new Map();
+    this.props = /* @__PURE__ */ new Map();
     this.gameObjects = [];
     characters.forEach((char) => {
       this.characters.set(char.name, char);
     });
+    props.forEach((prop) => {
+      this.props.set(prop.name, prop);
+    });
     this.area = area;
     this.events = events.map((e) => vnEventDtoToVnEvent(e));
-    this.gameObjects = characters;
+    this.gameObjects = characters.concat(props);
     this.initialStateEvent = new InitialStateEvent();
     this.initialStateEvent.properties = initialState;
     this.camera = new Camera(initialState.camera?.posX || 0, initialState.camera?.posY || 0);
@@ -36551,9 +36671,9 @@ var RFScene = class {
     this.dialogBox = new DialogBox(5, 240 - 55, 50, 320 - 10);
   }
   setToInitialState(initialState = this.initialStateEvent.properties) {
+    this.camera.x = initialState.camera?.posX || 0;
+    this.camera.y = initialState.camera?.posY || 0;
     initialState.characters.forEach((isChar) => {
-      this.camera.x = initialState.camera?.posX || 0;
-      this.camera.y = initialState.camera?.posY || 0;
       const rfChar = this.characters.get(isChar.name);
       if (rfChar) {
         rfChar.location.x = isChar.state.posX;
@@ -36561,9 +36681,25 @@ var RFScene = class {
         rfChar.setActiveSprite(isChar.state.sprite);
         rfChar.visible = isChar.state.visible;
         rfChar.flipped = isChar.state.flipped;
+        rfChar.zIndex = isChar.state.zIndex || 0;
         rfChar.showShadow = isChar.state.shadow;
       }
     });
+    initialState.props.forEach((isProp) => {
+      const rfProp = this.props.get(isProp.name);
+      if (rfProp) {
+        rfProp.location.x = isProp.state.posX;
+        rfProp.location.y = isProp.state.posY;
+        rfProp.setActiveSprite(isProp.state.sprite);
+        rfProp.visible = isProp.state.visible;
+        rfProp.flipped = isProp.state.flipped;
+        rfProp.zIndex = isProp.state.zIndex || 0;
+      }
+    });
+  }
+  // find an object of type RFCharacter or RFProp by name
+  findObject(name) {
+    return this.characters.get(name) || this.props.get(name);
   }
 };
 
@@ -36628,6 +36764,26 @@ var _PlayerAssetService = class _PlayerAssetService {
       return Promise.all(charPromise);
     });
   }
+  loadProp(project, propName) {
+    return __async(this, null, function* () {
+      const propUrl = `${this.baseUrl}/${project}/assets/props/${propName}.json`;
+      const propDto = yield this.get(propUrl);
+      const prop = new RFProp(propDto.name);
+      prop.sprites = /* @__PURE__ */ new Map();
+      propDto.sprites.forEach((sprite) => {
+        prop.sprites.set(sprite.name, new RFVisualAsset(sprite));
+      });
+      return prop;
+    });
+  }
+  loadProps(project, props) {
+    return __async(this, null, function* () {
+      const propPromise = props.map((propName) => __async(this, null, function* () {
+        return yield this.loadProp(project, propName);
+      }));
+      return Promise.all(propPromise);
+    });
+  }
   loadScene(project, sceneName) {
     return __async(this, null, function* () {
       const sceneUrl = `${this.baseUrl}/${project}/scenes/${sceneName}.json`;
@@ -36640,7 +36796,8 @@ var _PlayerAssetService = class _PlayerAssetService {
       const manifest = yield this.loadScene(project, sceneName);
       const area = yield this.loadRFArea(project, manifest.area);
       const characters = yield this.loadCharacters(project, manifest.characters);
-      const scene = new RFScene(characters, area, manifest.events, manifest.initialState);
+      const props = yield this.loadProps(project, manifest.props);
+      const scene = new RFScene(characters, area, props, manifest.events, manifest.initialState);
       return scene;
     });
   }
@@ -36696,13 +36853,13 @@ var _PlayerComponent = class _PlayerComponent {
   init() {
     return __async(this, null, function* () {
       const manifest = yield this.loaderService.loadProject(this.projectName);
-      this.mainfest = manifest;
+      this.manifest = manifest;
       this.mainCanvas.nativeElement.height = manifest.stageProperties.height;
       this.mainCanvas.nativeElement.width = manifest.stageProperties.width;
       this.player = new VNPlayer(this.mainCanvas.nativeElement, this.clickSubject);
       this.player.activeScene = yield this.loaderService.loadRFScene(this.projectName, this.initialSceneName);
-      this.player.activeScene.camera.width = this.mainfest.stageProperties.width;
-      this.player.activeScene.camera.height = this.mainfest.stageProperties.height;
+      this.player.activeScene.camera.width = this.manifest.stageProperties.width;
+      this.player.activeScene.camera.height = this.manifest.stageProperties.height;
       this.player.activeScene.setToInitialState();
       console.log("starting game loop");
       this.player.startGameLoop();
