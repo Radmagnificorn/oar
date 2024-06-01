@@ -1,1 +1,0 @@
-{"area":"cemetery-path","characters":["billy","zara"],"props": [],"events":[],"initialState":{"camera":{"posX":0,"posY":0},"characters":[{"name":"billy","state":{"posX":0,"posY":0,"visible":true,"flipped":false,"shadow":false,"sprite":""}},{"name":"zara","state":{"posX":0,"posY":0,"visible":true,"flipped":false,"shadow":false,"sprite":""}}]},"name":"test"}

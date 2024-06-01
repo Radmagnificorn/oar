@@ -1,2 +1,6 @@
 /* src/styles.scss */
+body {
+  background-color: #222;
+}
+
 /* angular:styles/global:styles */

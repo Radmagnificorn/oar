@@ -35325,6 +35325,7 @@ function fadeOut(obj) {
   return __async(this, null, function* () {
     for (obj.opacity = 1; obj.opacity > 0; obj.opacity -= 0.1) {
       yield obj.onUpdateEvent();
+      console.log(`obj.opacity: ${obj.opacity}`);
     }
     obj.opacity = 0;
     obj.visible = false;
@@ -35484,6 +35485,32 @@ var InitialStateEvent = class extends VNEvent {
     });
   }
 };
+var SceneOverlayShowEvent = class extends VNEvent {
+  constructor() {
+    super(...arguments);
+    this.properties = {
+      image: "",
+      text: "",
+      fadeIn: false,
+      fadeOut: true
+    };
+  }
+  execute(scene, animate = false) {
+    return __async(this, null, function* () {
+      let prop;
+      if (this.properties.image) {
+        prop = scene.props.get(this.properties.image);
+        if (prop) {
+          scene.overlay.image = prop.sprites.get("default") || prop.sprites.entries().next().value[1];
+        }
+      }
+      scene.overlay.fadeIn = this.properties.fadeIn && animate;
+      scene.overlay.fadeOut = this.properties.fadeOut && animate;
+      scene.overlay.text = this.properties.text;
+      yield scene.overlay.show();
+    });
+  }
+};
 
 // ../editor-ui/src/app/player/model/vnplayer.ts
 var VNPlayer = class {
@@ -35529,7 +35556,10 @@ var VNPlayer = class {
     return __async(this, null, function* () {
       console.log(`playing event ${vnEvent.constructor.name}`);
       if (!(vnEvent instanceof DialogSayEvent)) {
-        this.activeScene?.dialogBox.hide();
+        yield this.activeScene?.dialogBox.hide();
+      }
+      if (this.activeScene?.overlay.visible && !(vnEvent instanceof SceneOverlayShowEvent)) {
+        yield this.activeScene?.overlay.hide();
       }
       if (this.activeScene) {
         yield vnEvent.execute(this.activeScene, animate);
@@ -35559,6 +35589,7 @@ var VNPlayer = class {
       for (const go of this.activeScene.gameObjects) {
         go.onUpdate();
       }
+      yield this.activeScene.overlay.onUpdate();
       yield this.activeScene.dialogBox.onUpdate();
     });
   }
@@ -35574,7 +35605,7 @@ var VNPlayer = class {
         this.bufferCtx.drawImage(bgImg, bgx, bgy);
       }
       for (const go of this.activeScene.gameObjects) {
-        go.onRender(this.bufferCtx, { x: -camera.x, y: -camera.y });
+        yield go.onRender(this.bufferCtx, { x: -camera.x, y: -camera.y });
       }
       if (this.activeScene.area?.foreground.images.length) {
         const fgImg = this.activeScene.area.mask.getImage();
@@ -35583,6 +35614,7 @@ var VNPlayer = class {
         this.bufferCtx.drawImage(fgImg, fgX, fgY);
       }
       yield this.activeScene.dialogBox?.onRender(this.bufferCtx);
+      yield this.activeScene.overlay?.onRender(this.bufferCtx, { x: 0, y: 0 }, { x: camera.width, y: camera.height });
       this.ctx.drawImage(this.bufferCanvas, 0, 0);
     });
   }
@@ -36418,7 +36450,8 @@ var eventClassMap = /* @__PURE__ */ new Map([
   [DialogSayEvent.name, DialogSayEvent],
   [SpriteHideShowEvent.name, SpriteHideShowEvent],
   [InitialStateEvent.name, InitialStateEvent],
-  [CameraPanEvent.name, CameraPanEvent]
+  [CameraPanEvent.name, CameraPanEvent],
+  [SceneOverlayShowEvent.name, SceneOverlayShowEvent]
 ]);
 
 // ../editor-ui/src/app/player/model/rf-prop.ts
@@ -36646,6 +36679,59 @@ var Camera = class extends GameObject {
   }
 };
 
+// ../editor-ui/src/app/player/model/engine-components/scene-overlay.ts
+var SceneOverlay = class extends GameObject {
+  constructor() {
+    super(...arguments);
+    this.name = "Overlay";
+    this.type = "Overlay";
+    this.opacity = 1;
+    this.visible = false;
+    this.text = "";
+    this.fadeIn = false;
+    this.fadeOut = true;
+  }
+  show() {
+    return __async(this, null, function* () {
+      if (this.fadeIn) {
+        return fadeIn(this);
+      } else {
+        this.visible = true;
+        this.opacity = 1;
+      }
+    });
+  }
+  hide() {
+    return __async(this, null, function* () {
+      if (this.fadeOut) {
+        return fadeOut(this);
+      } else {
+        this.visible = false;
+        this.opacity = 0;
+      }
+    });
+  }
+  onRender(ctx, offset, canvasSize) {
+    if (this.visible && this.image) {
+      const ogOpacity = ctx.globalAlpha;
+      ctx.globalAlpha = this.opacity;
+      ctx.drawImage(this.image.images[0], this.location.x, this.location.y);
+      ctx.globalAlpha = ogOpacity;
+      if (this.text && canvasSize) {
+        ctx.font = "12px pixelfont";
+        ctx.fillStyle = "white";
+        const textWidth = ctx.measureText(this.text).width;
+        const textHeight = 30;
+        const textX = Math.round(canvasSize.x / 2 - textWidth / 2);
+        const textY = Math.round(canvasSize.y / 2 - textHeight / 2);
+        ctx.fillText(this.text, textX, textY);
+      }
+    }
+    return Promise.resolve();
+  }
+};
+var scene_overlay_default = SceneOverlay;
+
 // ../editor-ui/src/app/player/model/rf-scene.ts
 var RFScene = class {
   get actors() {
@@ -36669,6 +36755,7 @@ var RFScene = class {
     this.camera = new Camera(initialState.camera?.posX || 0, initialState.camera?.posY || 0);
     this.gameObjects.push(this.camera);
     this.dialogBox = new DialogBox(5, 240 - 55, 50, 320 - 10);
+    this.overlay = new scene_overlay_default();
   }
   setToInitialState(initialState = this.initialStateEvent.properties) {
     this.camera.x = initialState.camera?.posX || 0;
@@ -36924,9 +37011,9 @@ var _AppComponent = class _AppComponent {
 _AppComponent.\u0275fac = function AppComponent_Factory(t) {
   return new (t || _AppComponent)();
 };
-_AppComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AppComponent, selectors: [["app-root"]], standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 1, vars: 0, template: function AppComponent_Template(rf, ctx) {
+_AppComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _AppComponent, selectors: [["app-root"]], standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 1, vars: 0, consts: [[2, "width", "100%"]], template: function AppComponent_Template(rf, ctx) {
   if (rf & 1) {
-    \u0275\u0275element(0, "app-player");
+    \u0275\u0275element(0, "app-player", 0);
   }
 }, dependencies: [PlayerComponent] });
 var AppComponent = _AppComponent;
