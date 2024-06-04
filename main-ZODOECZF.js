@@ -35491,6 +35491,7 @@ var SceneOverlayShowEvent = class extends VNEvent {
     this.properties = {
       image: "",
       text: "",
+      textYPos: 0,
       fadeIn: false,
       fadeOut: true
     };
@@ -35507,6 +35508,7 @@ var SceneOverlayShowEvent = class extends VNEvent {
       scene.overlay.fadeIn = this.properties.fadeIn && animate;
       scene.overlay.fadeOut = this.properties.fadeOut && animate;
       scene.overlay.text = this.properties.text;
+      scene.overlay.textYPos = this.properties.textYPos;
       yield scene.overlay.show();
     });
   }
@@ -36688,6 +36690,7 @@ var SceneOverlay = class extends GameObject {
     this.opacity = 1;
     this.visible = false;
     this.text = "";
+    this.textYPos = 0;
     this.fadeIn = false;
     this.fadeOut = true;
   }
@@ -36723,8 +36726,7 @@ var SceneOverlay = class extends GameObject {
         const textWidth = ctx.measureText(this.text).width;
         const textHeight = 30;
         const textX = Math.round(canvasSize.x / 2 - textWidth / 2);
-        const textY = Math.round(canvasSize.y / 2 - textHeight / 2);
-        ctx.fillText(this.text, textX, textY);
+        ctx.fillText(this.text, textX, this.textYPos);
       }
     }
     return Promise.resolve();
@@ -36929,11 +36931,12 @@ var _c0 = ["mainCanvas"];
 var _PlayerComponent = class _PlayerComponent {
   constructor(loaderService) {
     this.loaderService = loaderService;
+    this.activeSceneIndex = 0;
     this.clickSubject = new Subject();
   }
   ngAfterViewInit() {
     const urlParams = new URLSearchParams(window.location.search);
-    this.projectName = urlParams.get("project") || "test";
+    this.projectName = urlParams.get("project") || "oar";
     this.initialSceneName = urlParams.get("scene") || "";
     this.init();
   }
@@ -36944,13 +36947,17 @@ var _PlayerComponent = class _PlayerComponent {
       this.mainCanvas.nativeElement.height = manifest.stageProperties.height;
       this.mainCanvas.nativeElement.width = manifest.stageProperties.width;
       this.player = new VNPlayer(this.mainCanvas.nativeElement, this.clickSubject);
-      this.player.activeScene = yield this.loaderService.loadRFScene(this.projectName, this.initialSceneName);
-      this.player.activeScene.camera.width = this.manifest.stageProperties.width;
-      this.player.activeScene.camera.height = this.manifest.stageProperties.height;
-      this.player.activeScene.setToInitialState();
-      console.log("starting game loop");
-      this.player.startGameLoop();
-      this.player.playSequence();
+      this.activeSceneIndex = this.initialSceneName ? this.manifest.scenes.indexOf(this.initialSceneName) : 0;
+      while (this.activeSceneIndex < this.manifest.scenes.length) {
+        this.player.activeScene = yield this.loaderService.loadRFScene(this.projectName, this.manifest.scenes[this.activeSceneIndex]);
+        this.player.activeScene.camera.width = this.manifest.stageProperties.width;
+        this.player.activeScene.camera.height = this.manifest.stageProperties.height;
+        this.player.activeScene.setToInitialState();
+        console.log("starting game loop");
+        this.player.startGameLoop();
+        yield this.player.playSequence();
+        this.activeSceneIndex++;
+      }
     });
   }
   onClick(event) {
