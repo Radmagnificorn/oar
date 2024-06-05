@@ -35465,7 +35465,7 @@ var DialogSayEvent = class extends VNEvent {
       const target = scene.characters.get(this.target);
       if (!target)
         return;
-      const portrait = target.portraits.get("default");
+      const portrait = target.portraits.get(this.properties.portrait || "default");
       let pImg = null;
       if (portrait) {
         pImg = portrait.getImage();
@@ -36898,7 +36898,7 @@ var _PlayerAssetService = class _PlayerAssetService {
       const backdrop = yield this.get(`${areaUrl}/backdrop.json`);
       const foreground = yield this.get(`${areaUrl}/foreground.json`);
       let mask = yield this.get(`${areaUrl}/mask.json`);
-      mask = mask.name ? mask : { name: "mask", encodedImages: [] };
+      mask = mask?.name ? mask : { name: "mask", encodedImages: [] };
       const emptyAsset = { name: "empty", encodedImages: [] };
       const area = new RFArea(manifest.name, new RFVisualAsset(backdrop || emptyAsset), new RFVisualAsset(background || emptyAsset), new RFVisualAsset(mask || emptyAsset), new RFVisualAsset(foreground || emptyAsset), manifest.backdropParallax, manifest.foregroundParallax);
       return area;
