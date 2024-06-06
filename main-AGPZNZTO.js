@@ -36944,8 +36944,7 @@ var _PlayerComponent = class _PlayerComponent {
     return __async(this, null, function* () {
       const manifest = yield this.loaderService.loadProject(this.projectName);
       this.manifest = manifest;
-      this.mainCanvas.nativeElement.height = manifest.stageProperties.height;
-      this.mainCanvas.nativeElement.width = manifest.stageProperties.width;
+      this.sizeCanvas(manifest.stageProperties);
       this.player = new VNPlayer(this.mainCanvas.nativeElement, this.clickSubject);
       this.activeSceneIndex = this.initialSceneName ? this.manifest.scenes.indexOf(this.initialSceneName) : 0;
       while (this.activeSceneIndex < this.manifest.scenes.length) {
@@ -36962,6 +36961,25 @@ var _PlayerComponent = class _PlayerComponent {
   }
   onClick(event) {
     this.clickSubject.next(event);
+  }
+  onResize() {
+    if (this.manifest) {
+      this.sizeCanvas(this.manifest.stageProperties);
+    }
+  }
+  sizeCanvas(stageProps) {
+    this.mainCanvas.nativeElement.height = stageProps.height;
+    this.mainCanvas.nativeElement.width = stageProps.width;
+    const canvas = this.mainCanvas.nativeElement;
+    const aspectRatio = canvas.width / canvas.height;
+    const screenAspectRatio = window.innerWidth / window.innerHeight;
+    if (screenAspectRatio < aspectRatio) {
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = "auto";
+    } else {
+      canvas.style.height = `${window.innerHeight}px`;
+      canvas.style.width = "auto";
+    }
   }
   convertScreenToCanvasPoint(xScreen, yScreen, canvas) {
     const rect = canvas.getBoundingClientRect();
@@ -36981,6 +36999,12 @@ _PlayerComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type:
     let _t;
     \u0275\u0275queryRefresh(_t = \u0275\u0275loadQuery()) && (ctx.mainCanvas = _t.first);
   }
+}, hostBindings: function PlayerComponent_HostBindings(rf, ctx) {
+  if (rf & 1) {
+    \u0275\u0275listener("resize", function PlayerComponent_resize_HostBindingHandler($event) {
+      return ctx.onResize($event);
+    }, false, \u0275\u0275resolveWindow);
+  }
 }, standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 2, vars: 0, consts: [["mainCanvas", ""], [2, "height", "480px", "width", "640px", "image-rendering", "pixelated", 3, "click"]], template: function PlayerComponent_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
@@ -36991,7 +37015,7 @@ _PlayerComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type:
     });
     \u0275\u0275elementEnd();
   }
-}, styles: ['\n\n@font-face {\n  font-family: "pixelfont";\n  src: url("./media/KH-Dot-Kagurazaka-12-3E6QYCUE.ttf") format("truetype");\n}'] });
+}, styles: ['\n\n@font-face {\n  font-family: "pixelfont";\n  src: url("./media/KH-Dot-Kagurazaka-12-3E6QYCUE.ttf") format("truetype");\n}\ncanvas[_ngcontent-%COMP%] {\n  display: block;\n  margin: 0 auto;\n}'] });
 var PlayerComponent = _PlayerComponent;
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PlayerComponent, { className: "PlayerComponent", filePath: "src\\app\\player\\player.component.ts", lineNumber: 14 });
