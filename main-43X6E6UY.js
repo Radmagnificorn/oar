@@ -35413,7 +35413,9 @@ var SpriteMoveEvent = class extends VNEvent {
       xPos: 0,
       yPos: 0,
       method: "",
-      time: 1e3
+      time: 1e3,
+      moveAnim: "none",
+      endAnim: "none"
     };
   }
   execute(scene, animate) {
@@ -35600,6 +35602,12 @@ var VNPlayer = class {
       if (!this.ctx || !this.bufferCtx || !this.activeScene)
         return;
       const camera = this.activeScene.camera;
+      if (this.activeScene.area?.backdrop.images.length) {
+        const bdImg = this.activeScene.area.backdrop.getImage();
+        const fgX = Math.round((camera.width - bdImg.naturalWidth) / 2 - camera.x * this.activeScene.area.backDropParallax);
+        const fgY = Math.round((camera.height - bdImg.naturalHeight) / 2 - camera.y * this.activeScene.area.backDropParallax);
+        this.bufferCtx.drawImage(bdImg, fgX, fgY);
+      }
       if (this.activeScene.area) {
         const bgImg = this.activeScene.area.background.getImage();
         const bgx = Math.round((camera.width - bgImg.naturalWidth) / 2) - camera.x;
@@ -35610,7 +35618,7 @@ var VNPlayer = class {
         yield go.onRender(this.bufferCtx, { x: -camera.x, y: -camera.y });
       }
       if (this.activeScene.area?.foreground.images.length) {
-        const fgImg = this.activeScene.area.mask.getImage();
+        const fgImg = this.activeScene.area.foreground.getImage();
         const fgX = Math.round((camera.width - fgImg.naturalWidth) / 2 - camera.x * this.activeScene.area.foreGroundParallax);
         const fgY = Math.round((camera.height - fgImg.naturalHeight) / 2 - camera.y * this.activeScene.area.foreGroundParallax);
         this.bufferCtx.drawImage(fgImg, fgX, fgY);
