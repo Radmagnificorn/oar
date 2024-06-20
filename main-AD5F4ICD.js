@@ -36107,17 +36107,27 @@ var SpriteMoveEvent = class extends VNEvent {
     this.properties = {
       xPos: 0,
       yPos: 0,
-      method: "",
+      method: "linear",
       time: 1e3,
       moveAnim: "none",
-      endAnim: "none"
+      moveFlipped: false,
+      endAnim: "none",
+      endFlipped: false
     };
   }
   execute(scene, animate2) {
     return __async(this, null, function* () {
       const target = scene.findObject(this.target);
       if (target) {
+        target.flipped = this.properties.moveFlipped;
+        if (this.properties.moveAnim !== "none") {
+          target.playSprite(this.properties.moveAnim, true, animate2);
+        }
         yield move(target, this.properties.xPos, this.properties.yPos, this.properties.method, this.properties.time, animate2);
+        target.flipped = this.properties.endFlipped;
+        if (this.properties.endAnim !== "none") {
+          yield target.playSprite(this.properties.endAnim, false, animate2);
+        }
       }
     });
   }
@@ -48357,7 +48367,7 @@ var CameraPanEvent = class extends VNEvent {
     this.properties = {
       x: 0,
       y: 0,
-      speed: 10,
+      speed: 100,
       mode: "linear"
     };
   }
