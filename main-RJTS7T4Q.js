@@ -36200,7 +36200,8 @@ var SceneOverlayShowEvent = class extends VNEvent {
       text: "",
       textYPos: 0,
       fadeIn: false,
-      fadeOut: true
+      fadeOut: true,
+      delayClose: 0
     };
   }
   execute(scene, animate2 = false) {
@@ -36212,6 +36213,7 @@ var SceneOverlayShowEvent = class extends VNEvent {
           scene.overlay.image = prop.sprites.get("default") || prop.sprites.entries().next().value[1];
         }
       }
+      scene.overlay.delayClose = this.properties.delayClose;
       scene.overlay.fadeIn = this.properties.fadeIn && animate2;
       scene.overlay.fadeOut = this.properties.fadeOut && animate2;
       scene.overlay.text = this.properties.text;
@@ -36267,8 +36269,13 @@ var VNPlayer = class {
       if (!(vnEvent instanceof DialogSayEvent)) {
         yield this.activeScene?.dialogBox.hide();
       }
-      if (this.activeScene?.overlay.visible && !(vnEvent instanceof SceneOverlayShowEvent)) {
-        yield this.activeScene?.overlay.hide();
+      const overlay = this.activeScene?.overlay;
+      if (overlay) {
+        if (overlay.visible && !overlay.delayClose && !(vnEvent instanceof SceneOverlayShowEvent)) {
+          yield this.activeScene?.overlay.hide();
+        } else if (overlay.delayClose) {
+          overlay.delayClose--;
+        }
       }
       if (this.activeScene) {
         yield vnEvent.execute(this.activeScene, animate2);
@@ -48632,6 +48639,7 @@ var SceneOverlay = class extends GameObject {
     this.textYPos = 0;
     this.fadeIn = false;
     this.fadeOut = true;
+    this.delayClose = 0;
   }
   show() {
     return __async(this, null, function* () {
