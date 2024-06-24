@@ -36136,7 +36136,8 @@ var SpriteHideShowEvent = class extends VNEvent {
   constructor() {
     super(...arguments);
     this.properties = {
-      mode: "show"
+      mode: "show",
+      effect: "fade"
     };
   }
   execute(scene, animate2) {
@@ -36145,12 +36146,12 @@ var SpriteHideShowEvent = class extends VNEvent {
       if (!target)
         return;
       if (this.properties.mode === "show") {
-        if (animate2)
+        if (animate2 && this.properties.effect === "fade")
           yield target.fadeIn();
         else
           target.visible = true;
       } else {
-        if (animate2)
+        if (animate2 && this.properties.effect === "fade")
           yield target.fadeOut();
         else
           target.visible = false;
@@ -36335,8 +36336,8 @@ var VNPlayer = class {
         const fgY = Math.round((camera.height - fgImg.naturalHeight) / 2 - camera.y * this.activeScene.area.foreGroundParallax);
         this.bufferCtx.drawImage(fgImg, fgX, fgY);
       }
-      yield this.activeScene.dialogBox?.onRender(this.bufferCtx);
       yield this.activeScene.overlay?.onRender(this.bufferCtx, { x: 0, y: 0 }, { x: camera.width, y: camera.height });
+      yield this.activeScene.dialogBox?.onRender(this.bufferCtx);
       this.ctx.drawImage(this.bufferCanvas, 0, 0);
     });
   }
