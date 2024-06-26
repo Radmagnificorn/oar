@@ -36284,6 +36284,8 @@ var VNPlayer = class {
     });
   }
   startGameLoop() {
+    if (this.playing)
+      return;
     this.activeScene?.area?.background.play(true);
     this.intervalId = setInterval(() => __async(this, null, function* () {
       yield this.onUpdate();
@@ -47517,11 +47519,11 @@ var matDialogAnimations = {
 };
 
 // src/app/chapter-select/chapter-select.component.ts
-function ChapterSelectComponent_span_4_Template(rf, ctx) {
+function ChapterSelectComponent_span_5_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
-    \u0275\u0275elementStart(0, "span", 2);
-    \u0275\u0275listener("click", function ChapterSelectComponent_span_4_Template_span_click_0_listener() {
+    \u0275\u0275elementStart(0, "span", 3);
+    \u0275\u0275listener("click", function ChapterSelectComponent_span_5_Template_span_click_0_listener() {
       const scene_r2 = \u0275\u0275restoreView(_r1).$implicit;
       const ctx_r2 = \u0275\u0275nextContext();
       return \u0275\u0275resetView(ctx_r2.navigateToScene(scene_r2));
@@ -47532,7 +47534,7 @@ function ChapterSelectComponent_span_4_Template(rf, ctx) {
   if (rf & 2) {
     const scene_r2 = ctx.$implicit;
     \u0275\u0275advance();
-    \u0275\u0275textInterpolate1("", scene_r2, " |");
+    \u0275\u0275textInterpolate1("\xA0", scene_r2, " |");
   }
 }
 var _ChapterSelectComponent = class _ChapterSelectComponent {
@@ -47550,23 +47552,24 @@ var _ChapterSelectComponent = class _ChapterSelectComponent {
 _ChapterSelectComponent.\u0275fac = function ChapterSelectComponent_Factory(t) {
   return new (t || _ChapterSelectComponent)(\u0275\u0275directiveInject(MatDialogRef), \u0275\u0275directiveInject(MAT_DIALOG_DATA));
 };
-_ChapterSelectComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ChapterSelectComponent, selectors: [["chapter-select"]], standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 5, vars: 1, consts: [[1, "dialog-overlay"], [3, "click", 4, "ngFor", "ngForOf"], [3, "click"]], template: function ChapterSelectComponent_Template(rf, ctx) {
+_ChapterSelectComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type: _ChapterSelectComponent, selectors: [["chapter-select"]], standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 6, vars: 1, consts: [[1, "dialog-overlay"], [1, "scenes"], [3, "click", 4, "ngFor", "ngForOf"], [3, "click"]], template: function ChapterSelectComponent_Template(rf, ctx) {
   if (rf & 1) {
     \u0275\u0275elementStart(0, "div", 0)(1, "h1");
-    \u0275\u0275text(2, "Chapter select");
+    \u0275\u0275text(2, "Select Scene");
     \u0275\u0275elementEnd();
-    \u0275\u0275elementStart(3, "div");
-    \u0275\u0275template(4, ChapterSelectComponent_span_4_Template, 2, 1, "span", 1);
+    \u0275\u0275elementStart(3, "div", 1);
+    \u0275\u0275text(4, " |");
+    \u0275\u0275template(5, ChapterSelectComponent_span_5_Template, 2, 1, "span", 2);
     \u0275\u0275elementEnd()();
   }
   if (rf & 2) {
-    \u0275\u0275advance(4);
+    \u0275\u0275advance(5);
     \u0275\u0275property("ngForOf", ctx.manifest.scenes);
   }
-}, dependencies: [CommonModule, NgForOf], styles: ["\n\ndiv[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  background-color: #383838;\n  color: white;\n}\nh1[_ngcontent-%COMP%] {\n  margin-bottom: 1rem;\n}\nspan[_ngcontent-%COMP%] {\n  cursor: pointer;\n}\n.dialog-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 0;\n  left: 0;\n  width: 50%;\n  height: 50%;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  background-color: #383838;\n  color: white;\n}\nh1[_ngcontent-%COMP%] {\n  margin-bottom: 1rem;\n}\nspan[_ngcontent-%COMP%] {\n  cursor: pointer;\n}"] });
+}, dependencies: [CommonModule, NgForOf], styles: ["\n\ndiv[_ngcontent-%COMP%] {\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  background-color: #383838;\n  color: white;\n}\nh1[_ngcontent-%COMP%] {\n  margin-bottom: 1rem;\n}\nspan[_ngcontent-%COMP%] {\n  cursor: pointer;\n}\n.dialog-overlay[_ngcontent-%COMP%] {\n  position: fixed;\n  top: 25%;\n  left: 25%;\n  width: 50%;\n  height: 50%;\n  display: flex;\n  flex-direction: column;\n  align-items: center;\n  background-color: #383838;\n  color: white;\n  border-radius: 20px;\n  box-shadow: 0 0 20px rgba(0, 0, 0, 0.66);\n}\n.scenes[_ngcontent-%COMP%] {\n  display: flex;\n  flex-wrap: wrap;\n  justify-content: center;\n  flex-direction: row;\n}\nh1[_ngcontent-%COMP%] {\n  margin-bottom: 1rem;\n}\nspan[_ngcontent-%COMP%] {\n  cursor: pointer;\n}"] });
 var ChapterSelectComponent = _ChapterSelectComponent;
 (() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ChapterSelectComponent, { className: "ChapterSelectComponent", filePath: "src\\app\\chapter-select\\chapter-select.component.ts", lineNumber: 52 });
+  (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(ChapterSelectComponent, { className: "ChapterSelectComponent", filePath: "src\\app\\chapter-select\\chapter-select.component.ts", lineNumber: 66 });
 })();
 
 // ../editor-ui/src/app/player/model/rf-area.ts
@@ -48903,7 +48906,9 @@ var _PlayerComponent = class _PlayerComponent {
         this.player.activeScene.camera.height = this.manifest.stageProperties.height;
         this.player.activeScene.setToInitialState();
         console.log("starting game loop");
-        this.player.startGameLoop();
+        if (!this.player.playing) {
+          this.player.startGameLoop();
+        }
         yield this.player.playSequence();
         this.activeSceneIndex++;
       }
@@ -48983,7 +48988,7 @@ _PlayerComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type:
       return ctx.onResize($event);
     }, false, \u0275\u0275resolveWindow);
   }
-}, standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 5, vars: 0, consts: [["mainCanvas", ""], ["menuButton", ""], [2, "height", "480px", "width", "640px", "image-rendering", "pixelated", 3, "click"], [2, "width", "50px", "height", "50px", "background-color", "#383838", "color", "#818181", 3, "click"]], template: function PlayerComponent_Template(rf, ctx) {
+}, standalone: true, features: [\u0275\u0275StandaloneFeature], decls: 5, vars: 0, consts: [["mainCanvas", ""], ["menuButton", ""], [2, "height", "480px", "width", "640px", "image-rendering", "pixelated", 3, "click"], [1, "menu-button", 2, "width", "50px", "height", "50px", "background-color", "#383838", "color", "#818181", 3, "click"]], template: function PlayerComponent_Template(rf, ctx) {
   if (rf & 1) {
     const _r1 = \u0275\u0275getCurrentView();
     \u0275\u0275elementStart(0, "canvas", 2, 0);
@@ -49000,7 +49005,7 @@ _PlayerComponent.\u0275cmp = /* @__PURE__ */ \u0275\u0275defineComponent({ type:
     \u0275\u0275text(4, "M");
     \u0275\u0275elementEnd();
   }
-}, styles: ['\n\n@font-face {\n  font-family: "pixelfont";\n  src: url("./media/KH-Dot-Kagurazaka-12-3E6QYCUE.ttf") format("truetype");\n}\ncanvas[_ngcontent-%COMP%] {\n  display: block;\n  margin: 0 auto;\n}'] });
+}, styles: ['\n\n@font-face {\n  font-family: "pixelfont";\n  src: url("./media/KH-Dot-Kagurazaka-12-3E6QYCUE.ttf") format("truetype");\n}\ncanvas[_ngcontent-%COMP%] {\n  display: block;\n  margin: 0 auto;\n}\n.menu-button[_ngcontent-%COMP%] {\n  margin: 10px;\n  border: none;\n  background: none;\n}'] });
 var PlayerComponent = _PlayerComponent;
 (() => {
   (typeof ngDevMode === "undefined" || ngDevMode) && \u0275setClassDebugInfo(PlayerComponent, { className: "PlayerComponent", filePath: "src\\app\\player\\player.component.ts", lineNumber: 21 });
