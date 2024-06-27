@@ -36026,6 +36026,21 @@ function fadeOut(obj) {
     obj.visible = false;
   });
 }
+function fadeTo(obj, opacity) {
+  return __async(this, null, function* () {
+    const ogOpacity = obj.opacity;
+    if (opacity > ogOpacity) {
+      for (obj.opacity = ogOpacity; obj.opacity < opacity; obj.opacity += 0.1) {
+        yield obj.onUpdateEvent();
+      }
+    } else {
+      for (obj.opacity = ogOpacity; obj.opacity > opacity; obj.opacity -= 0.1) {
+        yield obj.onUpdateEvent();
+      }
+    }
+    obj.opacity = opacity;
+  });
+}
 function move(obj, xPos, yPos, mode, time = 1e3, animate2 = true) {
   return __async(this, null, function* () {
     if (!animate2)
@@ -36137,7 +36152,8 @@ var SpriteHideShowEvent = class extends VNEvent {
     super(...arguments);
     this.properties = {
       mode: "show",
-      effect: "fade"
+      effect: "fade",
+      targetOpacity: 1
     };
   }
   execute(scene, animate2) {
@@ -36150,11 +36166,16 @@ var SpriteHideShowEvent = class extends VNEvent {
           yield target.fadeIn();
         else
           target.visible = true;
-      } else {
+      } else if (this.properties.mode === "hide") {
         if (animate2 && this.properties.effect === "fade")
           yield target.fadeOut();
         else
           target.visible = false;
+      } else if (this.properties.mode === "opacity" && target.visible) {
+        if (animate2 && this.properties.effect === "fade")
+          yield fadeTo(target, this.properties.targetOpacity);
+        else
+          target.opacity = this.properties.targetOpacity;
       }
     });
   }
@@ -48452,6 +48473,11 @@ var RFProp = class extends GameObject {
       return fadeIn(this);
     });
   }
+  fadeTo(opacity) {
+    return __async(this, null, function* () {
+      return fadeTo(this, opacity);
+    });
+  }
   onRender(ctx, offset = { x: 0, y: 0 }) {
     if (!ctx || !this.activeSprite || !this.visible)
       return Promise.resolve();
@@ -48720,6 +48746,7 @@ var RFScene = class {
         rfChar.location.y = isChar.state.posY;
         rfChar.setActiveSprite(isChar.state.sprite);
         rfChar.visible = isChar.state.visible;
+        rfChar.opacity = 1;
         rfChar.flipped = isChar.state.flipped;
         rfChar.zIndex = isChar.state.zIndex || 0;
         rfChar.showShadow = isChar.state.shadow;
@@ -48732,6 +48759,7 @@ var RFScene = class {
         rfProp.location.y = isProp.state.posY;
         rfProp.setActiveSprite(isProp.state.sprite);
         rfProp.visible = isProp.state.visible;
+        rfProp.opacity = 1;
         rfProp.flipped = isProp.state.flipped;
         rfProp.zIndex = isProp.state.zIndex || 0;
       }
