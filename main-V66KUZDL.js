@@ -36289,7 +36289,7 @@ var VNPlayer = class {
     return __async(this, null, function* () {
       console.log(`playing event ${vnEvent.constructor.name}`);
       if (!(vnEvent instanceof DialogSayEvent)) {
-        yield this.activeScene?.dialogBox.hide();
+        yield this.activeScene?.dialogBox.hide(animate2);
       }
       const overlay = this.activeScene?.overlay;
       if (overlay) {
@@ -48530,13 +48530,14 @@ var DialogBox = class extends GameObject {
     this.displayName = "";
     this.rowSpacing = 15;
     this.textOpacity = 0;
+    this.opacity = 1;
   }
   say(name, text, portrait = null, flip, animate2 = true) {
     return __async(this, null, function* () {
       this.portrait = portrait;
       this.displayName = name;
       this.flipped = flip;
-      yield this.show();
+      yield this.show(animate2);
       if (!animate2) {
         this.displayText = text;
         return;
@@ -48549,14 +48550,36 @@ var DialogBox = class extends GameObject {
       }
     });
   }
-  hide() {
+  hide(animate2 = false) {
     return __async(this, null, function* () {
+      animate2 = false;
+      if (!this.visible)
+        return;
+      if (animate2) {
+        while (this.opacity > 0) {
+          this.opacity -= 0.2;
+          yield this.onUpdateEvent();
+        }
+        this.opacity = 0;
+      }
       this.visible = false;
       this.portrait = null;
     });
   }
-  show() {
+  show(animate2 = false) {
     return __async(this, null, function* () {
+      animate2 = false;
+      if (this.visible)
+        return;
+      if (animate2) {
+        this.opacity = 0;
+        this.visible = true;
+        while (this.opacity < 1) {
+          this.opacity += 0.2;
+          yield this.onUpdateEvent();
+        }
+        this.opacity = 1;
+      }
       this.visible = true;
     });
   }
@@ -48573,6 +48596,8 @@ var DialogBox = class extends GameObject {
   onRender(ctx) {
     return __async(this, null, function* () {
       if (this.visible) {
+        const ogOpacity = ctx.globalAlpha;
+        ctx.globalAlpha = this.opacity;
         ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
         ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.font = "12px pixelfont";
@@ -48592,6 +48617,7 @@ var DialogBox = class extends GameObject {
           }
         }
         this.drawText(this.displayName, this.displayText, textStartX, textEndX - textStartX - 5, ctx);
+        ctx.globalAlpha = ogOpacity;
       }
     });
   }
