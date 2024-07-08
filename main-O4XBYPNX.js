@@ -36092,6 +36092,11 @@ var VNEvent = class {
       return Promise.resolve();
     });
   }
+  afterExecute(scene, animate2 = true) {
+    return __async(this, null, function* () {
+      return Promise.resolve();
+    });
+  }
 };
 var SpritePlayEvent = class extends VNEvent {
   constructor() {
@@ -36186,7 +36191,8 @@ var DialogSayEvent = class extends VNEvent {
     this.properties = {
       text: "",
       portrait: "default",
-      flip: false
+      flip: false,
+      keepOpen: false
     };
   }
   execute(scene, animate2) {
@@ -36200,6 +36206,13 @@ var DialogSayEvent = class extends VNEvent {
         pImg = portrait.getImage();
       }
       yield scene.dialogBox?.say(target.displayName || target.name, this.properties.text, pImg, this.properties.flip, animate2);
+    });
+  }
+  afterExecute(scene, animate2) {
+    return __async(this, null, function* () {
+      if (!this.properties.keepOpen) {
+        yield scene.dialogBox?.hide(animate2);
+      }
     });
   }
 };
@@ -36263,7 +36276,11 @@ var VNPlayer = class {
       console.log("playing events");
       if (!events)
         return;
+      let previousEvent = null;
       for (const vnEvent of events) {
+        if (this.activeScene && previousEvent) {
+          yield previousEvent.afterExecute(this.activeScene, animate2);
+        }
         if (vnEvent.advanceType === "async") {
           this.playEvent(vnEvent, animate2);
         } else {
@@ -36282,15 +36299,12 @@ var VNPlayer = class {
               break;
           }
         }
+        previousEvent = vnEvent;
       }
     });
   }
   playEvent(vnEvent, animate2 = true) {
     return __async(this, null, function* () {
-      console.log(`playing event ${vnEvent.constructor.name}`);
-      if (!(vnEvent instanceof DialogSayEvent)) {
-        yield this.activeScene?.dialogBox.hide(animate2);
-      }
       const overlay = this.activeScene?.overlay;
       if (overlay) {
         if (overlay.visible && !overlay.delayClose && !(vnEvent instanceof SceneOverlayShowEvent)) {
@@ -48537,13 +48551,15 @@ var DialogBox = class extends GameObject {
       this.portrait = portrait;
       this.displayName = name;
       this.flipped = flip;
-      yield this.show(animate2);
       if (!animate2) {
         this.displayText = text;
+        this.visible = true;
+        this.opacity = 1;
         return;
       }
       this.text = text;
       this.displayText = "";
+      yield this.show(animate2);
       for (let i = 0; i <= this.text.length; i++) {
         this.displayText = this.text.substring(0, i);
         yield this.onUpdateEvent();
@@ -48552,11 +48568,11 @@ var DialogBox = class extends GameObject {
   }
   hide(animate2 = false) {
     return __async(this, null, function* () {
-      animate2 = false;
+      console.log("start hiding");
       if (!this.visible)
         return;
       if (animate2) {
-        while (this.opacity > 0) {
+        while (this.opacity > 0.2) {
           this.opacity -= 0.2;
           yield this.onUpdateEvent();
         }
@@ -48564,11 +48580,12 @@ var DialogBox = class extends GameObject {
       }
       this.visible = false;
       this.portrait = null;
+      console.log("done hiding");
     });
   }
   show(animate2 = false) {
     return __async(this, null, function* () {
-      animate2 = false;
+      console.log("start showing");
       if (this.visible)
         return;
       if (animate2) {
@@ -48578,9 +48595,10 @@ var DialogBox = class extends GameObject {
           this.opacity += 0.2;
           yield this.onUpdateEvent();
         }
-        this.opacity = 1;
       }
+      this.opacity = 1;
       this.visible = true;
+      console.log("done showing");
     });
   }
   fadeTextIn() {
