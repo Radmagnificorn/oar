@@ -48748,17 +48748,24 @@ var SceneOverlay = class extends GameObject {
     });
   }
   onRender(ctx, offset, canvasSize) {
-    if (this.visible && this.image) {
+    if (this.visible) {
       const ogOpacity = ctx.globalAlpha;
       ctx.globalAlpha = this.opacity;
-      ctx.drawImage(this.image.images[0], this.location.x, this.location.y);
+      if (this.image) {
+        ctx.drawImage(this.image.images[0], this.location.x, this.location.y);
+      }
       if (this.text && canvasSize) {
         ctx.font = "12px pixelfont";
         ctx.fillStyle = "white";
-        const textWidth = ctx.measureText(this.text).width;
-        const textHeight = 30;
-        const textX = Math.round(canvasSize.x / 2 - textWidth / 2);
-        ctx.fillText(this.text, textX, this.textYPos);
+        const lines = this.text.split("\n");
+        let textY = this.textYPos;
+        for (let line of lines) {
+          const textWidth = ctx.measureText(line).width;
+          const textHeight = 30;
+          const textX = Math.round(canvasSize.x / 2 - textWidth / 2);
+          ctx.fillText(line, textX, textY);
+          textY += 15;
+        }
       }
       ctx.globalAlpha = ogOpacity;
     }
