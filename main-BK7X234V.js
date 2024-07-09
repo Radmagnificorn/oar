@@ -36192,7 +36192,8 @@ var DialogSayEvent = class extends VNEvent {
       text: "",
       portrait: "default",
       flip: false,
-      keepOpen: false
+      keepOpen: false,
+      nameOverride: ""
     };
   }
   execute(scene, animate2) {
@@ -36205,7 +36206,7 @@ var DialogSayEvent = class extends VNEvent {
       if (portrait) {
         pImg = portrait.getImage();
       }
-      yield scene.dialogBox?.say(target.displayName || target.name, this.properties.text, pImg, this.properties.flip, animate2);
+      yield scene.dialogBox?.say(this.properties.nameOverride || target.displayName || target.name, this.properties.text, pImg, this.properties.flip, animate2);
     });
   }
   afterExecute(scene, animate2) {
@@ -36223,7 +36224,7 @@ var InitialStateEvent = class extends VNEvent {
   }
   execute(scene, animate2) {
     return __async(this, null, function* () {
-      scene.setToInitialState(this.properties);
+      yield scene.setToInitialState(this.properties);
     });
   }
 };
@@ -36271,6 +36272,19 @@ var VNPlayer = class {
     console.log(`canvas size ${canvas.width} x ${canvas.height}`);
     this.bufferCtx = this.bufferCanvas.getContext("2d");
   }
+  playSequenceFromEvent(eventIndex) {
+    return __async(this, null, function* () {
+      if (this.activeScene) {
+        let silentEvents = [this.activeScene.initialStateEvent];
+        silentEvents = silentEvents.concat(this.activeScene.events.slice(0, eventIndex));
+        for (let vnEvent of silentEvents) {
+          yield this.playEvent(vnEvent, false);
+        }
+        const playEvents = this.activeScene.events.slice(eventIndex);
+        yield this.playSequence(playEvents, true);
+      }
+    });
+  }
   playSequence() {
     return __async(this, arguments, function* (events = this.activeScene?.events, animate2 = true) {
       console.log("playing events");
@@ -36305,6 +36319,8 @@ var VNPlayer = class {
   }
   playEvent(vnEvent, animate2 = true) {
     return __async(this, null, function* () {
+      if (this.onPlayEvent)
+        this.onPlayEvent();
       const overlay = this.activeScene?.overlay;
       if (overlay) {
         if (overlay.visible && !overlay.delayClose && !(vnEvent instanceof SceneOverlayShowEvent)) {
@@ -48568,7 +48584,6 @@ var DialogBox = class extends GameObject {
   }
   hide(animate2 = false) {
     return __async(this, null, function* () {
-      console.log("start hiding");
       if (!this.visible)
         return;
       if (animate2) {
@@ -48580,12 +48595,10 @@ var DialogBox = class extends GameObject {
       }
       this.visible = false;
       this.portrait = null;
-      console.log("done hiding");
     });
   }
   show(animate2 = false) {
     return __async(this, null, function* () {
-      console.log("start showing");
       if (this.visible)
         return;
       if (animate2) {
@@ -48598,7 +48611,6 @@ var DialogBox = class extends GameObject {
       }
       this.opacity = 1;
       this.visible = true;
-      console.log("done showing");
     });
   }
   fadeTextIn() {
@@ -48780,33 +48792,36 @@ var RFScene = class {
     this.dialogBox = new DialogBox(5, 240 - 55, 50, 320 - 10);
     this.overlay = new scene_overlay_default();
   }
-  setToInitialState(initialState = this.initialStateEvent.properties) {
-    this.camera.x = initialState.camera?.posX || 0;
-    this.camera.y = initialState.camera?.posY || 0;
-    initialState.characters.forEach((isChar) => {
-      const rfChar = this.characters.get(isChar.name);
-      if (rfChar) {
-        rfChar.location.x = isChar.state.posX;
-        rfChar.location.y = isChar.state.posY;
-        rfChar.setActiveSprite(isChar.state.sprite);
-        rfChar.visible = isChar.state.visible;
-        rfChar.opacity = 1;
-        rfChar.flipped = isChar.state.flipped;
-        rfChar.zIndex = isChar.state.zIndex || 0;
-        rfChar.showShadow = isChar.state.shadow;
-      }
-    });
-    initialState.props.forEach((isProp) => {
-      const rfProp = this.props.get(isProp.name);
-      if (rfProp) {
-        rfProp.location.x = isProp.state.posX;
-        rfProp.location.y = isProp.state.posY;
-        rfProp.setActiveSprite(isProp.state.sprite);
-        rfProp.visible = isProp.state.visible;
-        rfProp.opacity = 1;
-        rfProp.flipped = isProp.state.flipped;
-        rfProp.zIndex = isProp.state.zIndex || 0;
-      }
+  setToInitialState() {
+    return __async(this, arguments, function* (initialState = this.initialStateEvent.properties) {
+      this.camera.x = initialState.camera?.posX || 0;
+      this.camera.y = initialState.camera?.posY || 0;
+      yield this.dialogBox.hide(false);
+      initialState.characters.forEach((isChar) => {
+        const rfChar = this.characters.get(isChar.name);
+        if (rfChar) {
+          rfChar.location.x = isChar.state.posX;
+          rfChar.location.y = isChar.state.posY;
+          rfChar.setActiveSprite(isChar.state.sprite);
+          rfChar.visible = isChar.state.visible;
+          rfChar.opacity = 1;
+          rfChar.flipped = isChar.state.flipped;
+          rfChar.zIndex = isChar.state.zIndex || 0;
+          rfChar.showShadow = isChar.state.shadow;
+        }
+      });
+      initialState.props.forEach((isProp) => {
+        const rfProp = this.props.get(isProp.name);
+        if (rfProp) {
+          rfProp.location.x = isProp.state.posX;
+          rfProp.location.y = isProp.state.posY;
+          rfProp.setActiveSprite(isProp.state.sprite);
+          rfProp.visible = isProp.state.visible;
+          rfProp.opacity = 1;
+          rfProp.flipped = isProp.state.flipped;
+          rfProp.zIndex = isProp.state.zIndex || 0;
+        }
+      });
     });
   }
   // find an object of type RFCharacter or RFProp by name
@@ -48956,13 +48971,31 @@ var _PlayerComponent = class _PlayerComponent {
   constructor(loaderService, chDialog) {
     this.loaderService = loaderService;
     this.chDialog = chDialog;
+    this.initialSceneIndex = 0;
     this.activeSceneIndex = 0;
+    this.activeEventIndex = 0;
+    this.initialEventIndex = 0;
     this.clickSubject = new Subject();
   }
   ngAfterViewInit() {
     const urlParams = new URLSearchParams(window.location.search);
     this.projectName = urlParams.get("project") || "oar";
-    this.initialSceneName = urlParams.get("scene") || "";
+    this.initialSceneIndex = Number(urlParams.get("scene")) || 0;
+    const eventIndex = urlParams.get("event") || "0";
+    this.initialEventIndex = Number(eventIndex);
+    if (!this.initialSceneIndex) {
+      const resumeScene = localStorage.getItem("sceneIndex");
+      if (resumeScene) {
+        const resume = window.confirm("Resume from last scene?");
+        if (resume) {
+          this.initialSceneIndex = Number(resumeScene);
+          const resumeEvent = localStorage.getItem("eventIndex");
+          if (resumeEvent) {
+            this.initialEventIndex = Number(resumeEvent);
+          }
+        }
+      }
+    }
     this.init();
   }
   init() {
@@ -48971,17 +49004,30 @@ var _PlayerComponent = class _PlayerComponent {
       this.manifest = manifest;
       this.sizeCanvas(manifest.stageProperties);
       this.player = new VNPlayer(this.mainCanvas.nativeElement, this.clickSubject);
-      this.activeSceneIndex = this.initialSceneName ? this.manifest.scenes.indexOf(this.initialSceneName) : 0;
+      this.activeSceneIndex = this.initialSceneIndex;
+      this.player.onPlayEvent = () => {
+        console.log(`event: ${this.activeEventIndex}`);
+        localStorage.setItem("eventIndex", this.activeEventIndex.toString());
+        localStorage.setItem("sceneIndex", this.activeSceneIndex.toString());
+        this.activeEventIndex++;
+      };
+      let firstRun = true;
       while (this.activeSceneIndex < this.manifest.scenes.length) {
         this.player.activeScene = yield this.loaderService.loadRFScene(this.projectName, this.manifest.scenes[this.activeSceneIndex]);
         this.player.activeScene.camera.width = this.manifest.stageProperties.width;
         this.player.activeScene.camera.height = this.manifest.stageProperties.height;
-        this.player.activeScene.setToInitialState();
+        yield this.player.activeScene.setToInitialState();
         console.log("starting game loop");
         if (!this.player.playing) {
           this.player.startGameLoop();
         }
-        yield this.player.playSequence();
+        this.activeEventIndex = 0;
+        if (firstRun && this.initialEventIndex > 0) {
+          yield this.player.playSequenceFromEvent(this.initialEventIndex);
+          firstRun = false;
+        } else {
+          yield this.player.playSequence();
+        }
         this.activeSceneIndex++;
       }
     });
@@ -49004,7 +49050,7 @@ var _PlayerComponent = class _PlayerComponent {
       canvas.style.width = `${window.innerWidth * 0.95}px`;
       canvas.style.height = "auto";
       if (this.menuButton) {
-        this.menuButton.nativeElement.style.left = "50%";
+        this.menuButton.nativeElement.style.left = `${(window.innerWidth - this.menuButton.nativeElement.offsetWidth) / 2}px`;
         this.menuButton.nativeElement.style.display = "block";
         this.menuButton.nativeElement.style.position = "relative";
       }
@@ -49030,7 +49076,8 @@ var _PlayerComponent = class _PlayerComponent {
       }
     }).afterClosed().subscribe((scene) => {
       if (scene) {
-        window.location.href = `?project=${this.projectName}&scene=${scene}`;
+        const sceneIndex = this.manifest.scenes.indexOf(scene);
+        window.location.href = `?project=${this.projectName}&scene=${sceneIndex}`;
       }
     });
   }
