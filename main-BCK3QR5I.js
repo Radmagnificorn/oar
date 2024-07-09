@@ -48381,7 +48381,7 @@ var RFVisualAsset = class {
     this.imageIndex = 0;
     this.images = [];
     this.fps = 0;
-    this._playing = false;
+    this._playing = true;
     this._looping = false;
     this.lastUpdate = Date.now();
     this.images = asset.encodedImages.map((encImage) => {
