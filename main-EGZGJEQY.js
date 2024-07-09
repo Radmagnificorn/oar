@@ -47634,6 +47634,10 @@ var RFArea = class {
     this.backDropParallax = backDropParallax;
     this.foreGroundParallax = foreGroundParallax;
     this.layers = [];
+    this.background.play(true);
+    this.mask.play(true);
+    this.foreground.play(true);
+    this.backdrop.play(true);
   }
 };
 
@@ -48381,7 +48385,7 @@ var RFVisualAsset = class {
     this.imageIndex = 0;
     this.images = [];
     this.fps = 0;
-    this._playing = true;
+    this._playing = false;
     this._looping = false;
     this.lastUpdate = Date.now();
     this.images = asset.encodedImages.map((encImage) => {
