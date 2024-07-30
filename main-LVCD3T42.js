@@ -36247,6 +36247,7 @@ var SceneOverlayShowEvent = class extends VNEvent {
         prop = scene.props.get(this.properties.image);
         if (prop) {
           scene.overlay.image = prop.sprites.get("default") || prop.sprites.entries().next().value[1];
+          scene.overlay.image?.play(true);
         }
       }
       scene.overlay.delayClose = this.properties.delayClose;
@@ -48756,7 +48757,7 @@ var SceneOverlay = class extends GameObject {
       const ogOpacity = ctx.globalAlpha;
       ctx.globalAlpha = this.opacity;
       if (this.image) {
-        ctx.drawImage(this.image.images[0], this.location.x, this.location.y);
+        ctx.drawImage(this.image.getImage(), this.location.x, this.location.y);
       }
       if (this.text && canvasSize) {
         ctx.font = "12px pixelfont";
