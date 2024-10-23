@@ -36055,6 +36055,11 @@ function move(obj, xPos, yPos, mode, time = 1e3, animate2 = true) {
       case "linear":
         yield moveLinear(obj, xPos, yPos, time);
         break;
+      case "easeIn":
+      case "easeOut":
+      case "easeInOut":
+        yield moveEase(obj, xPos, yPos, time, mode);
+        break;
       default:
         obj.location.x = xPos;
         obj.location.y = yPos;
@@ -36070,8 +36075,47 @@ function moveLinear(obj, xPos, yPos, ms) {
     const startTime = Date.now();
     while (Date.now() - startTime < ms) {
       const progress = (Date.now() - startTime) / ms;
-      obj.location.x = startX + dx * progress;
-      obj.location.y = startY + dy * progress;
+      obj.location.x = Math.round(startX + dx * progress);
+      obj.location.y = Math.round(startY + dy * progress);
+      yield obj.onUpdateEvent();
+    }
+    obj.location.x = xPos;
+    obj.location.y = yPos;
+  });
+}
+var easeInFunc = (start, d, progress) => start + d * progress * progress;
+var easeInOutFunc = (start, d, progress) => {
+  progress *= 2;
+  if (progress < 1)
+    return start + d / 2 * progress * progress;
+  return start + d / 2 * ((progress - 1) * (progress - 3) - 1);
+};
+var easeOutQuad = (start, d, progress) => start + d * progress * (2 - progress);
+function moveEase(obj, xPos, yPos, ms, mode) {
+  return __async(this, null, function* () {
+    let easing;
+    switch (mode) {
+      case "easeIn":
+        easing = easeInFunc;
+        break;
+      case "easeOut":
+        easing = easeOutQuad;
+        break;
+      case "easeInOut":
+        easing = easeInOutFunc;
+        break;
+      default:
+        easing = easeInOutFunc;
+    }
+    const startX = obj.location.x;
+    const startY = obj.location.y;
+    const dx = xPos - startX;
+    const dy = yPos - startY;
+    const startTime = Date.now();
+    while (Date.now() - startTime < ms) {
+      const progress = (Date.now() - startTime) / ms;
+      obj.location.x = Math.round(easing(startX, dx, progress));
+      obj.location.y = Math.round(easing(startY, dy, progress));
       yield obj.onUpdateEvent();
     }
     obj.location.x = xPos;
@@ -48676,8 +48720,8 @@ var DialogBox = class extends GameObject {
     ctx.fillStyle = "gray";
     ctx.fillText(name, x, nameY);
     ctx.fillStyle = "white";
-    ctx.fillText(row1.join(" "), x, row1Y);
-    ctx.fillText(row2.join(" "), x, row2Y);
+    ctx.fillText(row1.join(" "), Math.round(x), Math.round(row1Y));
+    ctx.fillText(row2.join(" "), Math.round(x), Math.round(row2Y));
   }
 };
 
@@ -48697,6 +48741,7 @@ var Camera = class extends GameObject {
   // move camera to x, y over time using while loop and await this.onUpdateEvent()
   panTo(x, y, time) {
     return __async(this, null, function* () {
+      const easingFunction = easeOutQuad;
       const dx = x - this.x;
       const dy = y - this.y;
       const steps = time / 10;
@@ -48711,6 +48756,44 @@ var Camera = class extends GameObject {
         this.y = Math.round(shadowY);
         yield this.onUpdateEvent();
       }
+    });
+  }
+  panToTime(x, y, time) {
+    return __async(this, null, function* () {
+      const easingFunction = easeOutQuad;
+      const startX = this.x;
+      const startY = this.y;
+      const dx = x - startX;
+      const dy = y - startY;
+      const steps = Math.ceil(time / 16);
+      for (let i = 0; i <= steps; i++) {
+        const progress = i / steps;
+        this.x = Math.round(easingFunction(startX, dx, progress));
+        this.y = Math.round(easingFunction(startY, dy, progress));
+        yield this.onUpdateEvent();
+      }
+      this.x = x;
+      this.y = y;
+    });
+  }
+  panTox(x, y, time) {
+    return __async(this, null, function* () {
+      const easingFunction = easeOutQuad;
+      const startX = this.x;
+      const startY = this.y;
+      const dx = x - startX;
+      const dy = y - startY;
+      const startTime = Date.now();
+      while (Date.now() - startTime < time) {
+        console.log("panning");
+        const progress = (Date.now() - startTime) / time;
+        this.x = Math.round(easingFunction(startX, dx, progress));
+        this.y = Math.round(easingFunction(startY, dy, progress));
+        yield this.onUpdateEvent();
+      }
+      this.x = x;
+      this.y = y;
+      console.log("finished pan");
     });
   }
   onRender(camera, offset) {
