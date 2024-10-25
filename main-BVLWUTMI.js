@@ -48738,49 +48738,11 @@ var Camera = class extends GameObject {
     this.x = x;
     this.y = y;
   }
-  // move camera to x, y over time using while loop and await this.onUpdateEvent()
   panTo(x, y, time) {
     return __async(this, null, function* () {
       const easingFunction = easeOutQuad;
-      const dx = x - this.x;
-      const dy = y - this.y;
-      const steps = time / 10;
-      const stepX = dx / steps;
-      const stepY = dy / steps;
-      let shadowX = this.x;
-      let shadowY = this.y;
-      for (let i = 0; i < steps; i++) {
-        shadowX += stepX;
-        shadowY += stepY;
-        this.x = Math.round(shadowX);
-        this.y = Math.round(shadowY);
-        yield this.onUpdateEvent();
-      }
-    });
-  }
-  panToTime(x, y, time) {
-    return __async(this, null, function* () {
-      const easingFunction = easeOutQuad;
-      const startX = this.x;
-      const startY = this.y;
-      const dx = x - startX;
-      const dy = y - startY;
-      const steps = Math.ceil(time / 16);
-      for (let i = 0; i <= steps; i++) {
-        const progress = i / steps;
-        this.x = Math.round(easingFunction(startX, dx, progress));
-        this.y = Math.round(easingFunction(startY, dy, progress));
-        yield this.onUpdateEvent();
-      }
-      this.x = x;
-      this.y = y;
-    });
-  }
-  panTox(x, y, time) {
-    return __async(this, null, function* () {
-      const easingFunction = easeOutQuad;
-      const startX = this.x;
-      const startY = this.y;
+      const startX = Number(this.x);
+      const startY = Number(this.y);
       const dx = x - startX;
       const dy = y - startY;
       const startTime = Date.now();
