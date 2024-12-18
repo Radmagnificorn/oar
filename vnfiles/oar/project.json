@@ -1,1 +1,15 @@
-{"name":"oar","displayName":"Occult Artifact Retrieval Team","stageProperties":{"height":240,"width":320},"scenes":["prologue","the library","cemetery gates","cemetery path","back at the library","weapons deal"]}
+{
+  "name": "oar",
+  "displayName": "Occult Artifact Retrieval Team",
+  "stageProperties": {
+    "height": 240,
+    "width": 320
+  },
+  "scenes": [
+    "prologue",
+    "the library",
+    "cemetery gates",
+    "cemetery path",
+    "back at the library"
+  ]
+}
