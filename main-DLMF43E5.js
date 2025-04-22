@@ -36123,6 +36123,736 @@ function moveEase(obj, xPos, yPos, ms, mode) {
   });
 }
 
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/isFunction.js
+function isFunction3(value) {
+  return typeof value === "function";
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/createErrorClass.js
+function createErrorClass2(createImpl) {
+  const _super = (instance) => {
+    Error.call(instance);
+    instance.stack = new Error().stack;
+  };
+  const ctorFunc = createImpl(_super);
+  ctorFunc.prototype = Object.create(Error.prototype);
+  ctorFunc.prototype.constructor = ctorFunc;
+  return ctorFunc;
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/UnsubscriptionError.js
+var UnsubscriptionError2 = createErrorClass2((_super) => function UnsubscriptionErrorImpl(errors) {
+  _super(this);
+  this.message = errors ? `${errors.length} errors occurred during unsubscription:
+${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join("\n  ")}` : "";
+  this.name = "UnsubscriptionError";
+  this.errors = errors;
+});
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/arrRemove.js
+function arrRemove2(arr, item) {
+  if (arr) {
+    const index = arr.indexOf(item);
+    0 <= index && arr.splice(index, 1);
+  }
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/Subscription.js
+var Subscription2 = class _Subscription {
+  constructor(initialTeardown) {
+    this.initialTeardown = initialTeardown;
+    this.closed = false;
+    this._parentage = null;
+    this._finalizers = null;
+  }
+  unsubscribe() {
+    let errors;
+    if (!this.closed) {
+      this.closed = true;
+      const { _parentage } = this;
+      if (_parentage) {
+        this._parentage = null;
+        if (Array.isArray(_parentage)) {
+          for (const parent of _parentage) {
+            parent.remove(this);
+          }
+        } else {
+          _parentage.remove(this);
+        }
+      }
+      const { initialTeardown: initialFinalizer } = this;
+      if (isFunction3(initialFinalizer)) {
+        try {
+          initialFinalizer();
+        } catch (e) {
+          errors = e instanceof UnsubscriptionError2 ? e.errors : [e];
+        }
+      }
+      const { _finalizers } = this;
+      if (_finalizers) {
+        this._finalizers = null;
+        for (const finalizer of _finalizers) {
+          try {
+            execFinalizer2(finalizer);
+          } catch (err) {
+            errors = errors !== null && errors !== void 0 ? errors : [];
+            if (err instanceof UnsubscriptionError2) {
+              errors = [...errors, ...err.errors];
+            } else {
+              errors.push(err);
+            }
+          }
+        }
+      }
+      if (errors) {
+        throw new UnsubscriptionError2(errors);
+      }
+    }
+  }
+  add(teardown) {
+    var _a;
+    if (teardown && teardown !== this) {
+      if (this.closed) {
+        execFinalizer2(teardown);
+      } else {
+        if (teardown instanceof _Subscription) {
+          if (teardown.closed || teardown._hasParent(this)) {
+            return;
+          }
+          teardown._addParent(this);
+        }
+        (this._finalizers = (_a = this._finalizers) !== null && _a !== void 0 ? _a : []).push(teardown);
+      }
+    }
+  }
+  _hasParent(parent) {
+    const { _parentage } = this;
+    return _parentage === parent || Array.isArray(_parentage) && _parentage.includes(parent);
+  }
+  _addParent(parent) {
+    const { _parentage } = this;
+    this._parentage = Array.isArray(_parentage) ? (_parentage.push(parent), _parentage) : _parentage ? [_parentage, parent] : parent;
+  }
+  _removeParent(parent) {
+    const { _parentage } = this;
+    if (_parentage === parent) {
+      this._parentage = null;
+    } else if (Array.isArray(_parentage)) {
+      arrRemove2(_parentage, parent);
+    }
+  }
+  remove(teardown) {
+    const { _finalizers } = this;
+    _finalizers && arrRemove2(_finalizers, teardown);
+    if (teardown instanceof _Subscription) {
+      teardown._removeParent(this);
+    }
+  }
+};
+Subscription2.EMPTY = (() => {
+  const empty = new Subscription2();
+  empty.closed = true;
+  return empty;
+})();
+var EMPTY_SUBSCRIPTION2 = Subscription2.EMPTY;
+function isSubscription2(value) {
+  return value instanceof Subscription2 || value && "closed" in value && isFunction3(value.remove) && isFunction3(value.add) && isFunction3(value.unsubscribe);
+}
+function execFinalizer2(finalizer) {
+  if (isFunction3(finalizer)) {
+    finalizer();
+  } else {
+    finalizer.unsubscribe();
+  }
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/config.js
+var config2 = {
+  onUnhandledError: null,
+  onStoppedNotification: null,
+  Promise: void 0,
+  useDeprecatedSynchronousErrorHandling: false,
+  useDeprecatedNextContext: false
+};
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/scheduler/timeoutProvider.js
+var timeoutProvider2 = {
+  setTimeout(handler, timeout, ...args) {
+    const { delegate } = timeoutProvider2;
+    if (delegate === null || delegate === void 0 ? void 0 : delegate.setTimeout) {
+      return delegate.setTimeout(handler, timeout, ...args);
+    }
+    return setTimeout(handler, timeout, ...args);
+  },
+  clearTimeout(handle) {
+    const { delegate } = timeoutProvider2;
+    return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearTimeout) || clearTimeout)(handle);
+  },
+  delegate: void 0
+};
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/reportUnhandledError.js
+function reportUnhandledError2(err) {
+  timeoutProvider2.setTimeout(() => {
+    const { onUnhandledError } = config2;
+    if (onUnhandledError) {
+      onUnhandledError(err);
+    } else {
+      throw err;
+    }
+  });
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/noop.js
+function noop4() {
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/NotificationFactories.js
+var COMPLETE_NOTIFICATION2 = (() => createNotification2("C", void 0, void 0))();
+function errorNotification2(error) {
+  return createNotification2("E", void 0, error);
+}
+function nextNotification2(value) {
+  return createNotification2("N", value, void 0);
+}
+function createNotification2(kind, value, error) {
+  return {
+    kind,
+    value,
+    error
+  };
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/errorContext.js
+var context2 = null;
+function errorContext2(cb) {
+  if (config2.useDeprecatedSynchronousErrorHandling) {
+    const isRoot = !context2;
+    if (isRoot) {
+      context2 = { errorThrown: false, error: null };
+    }
+    cb();
+    if (isRoot) {
+      const { errorThrown, error } = context2;
+      context2 = null;
+      if (errorThrown) {
+        throw error;
+      }
+    }
+  } else {
+    cb();
+  }
+}
+function captureError2(err) {
+  if (config2.useDeprecatedSynchronousErrorHandling && context2) {
+    context2.errorThrown = true;
+    context2.error = err;
+  }
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/Subscriber.js
+var Subscriber2 = class extends Subscription2 {
+  constructor(destination) {
+    super();
+    this.isStopped = false;
+    if (destination) {
+      this.destination = destination;
+      if (isSubscription2(destination)) {
+        destination.add(this);
+      }
+    } else {
+      this.destination = EMPTY_OBSERVER2;
+    }
+  }
+  static create(next, error, complete) {
+    return new SafeSubscriber2(next, error, complete);
+  }
+  next(value) {
+    if (this.isStopped) {
+      handleStoppedNotification2(nextNotification2(value), this);
+    } else {
+      this._next(value);
+    }
+  }
+  error(err) {
+    if (this.isStopped) {
+      handleStoppedNotification2(errorNotification2(err), this);
+    } else {
+      this.isStopped = true;
+      this._error(err);
+    }
+  }
+  complete() {
+    if (this.isStopped) {
+      handleStoppedNotification2(COMPLETE_NOTIFICATION2, this);
+    } else {
+      this.isStopped = true;
+      this._complete();
+    }
+  }
+  unsubscribe() {
+    if (!this.closed) {
+      this.isStopped = true;
+      super.unsubscribe();
+      this.destination = null;
+    }
+  }
+  _next(value) {
+    this.destination.next(value);
+  }
+  _error(err) {
+    try {
+      this.destination.error(err);
+    } finally {
+      this.unsubscribe();
+    }
+  }
+  _complete() {
+    try {
+      this.destination.complete();
+    } finally {
+      this.unsubscribe();
+    }
+  }
+};
+var _bind2 = Function.prototype.bind;
+function bind2(fn, thisArg) {
+  return _bind2.call(fn, thisArg);
+}
+var ConsumerObserver2 = class {
+  constructor(partialObserver) {
+    this.partialObserver = partialObserver;
+  }
+  next(value) {
+    const { partialObserver } = this;
+    if (partialObserver.next) {
+      try {
+        partialObserver.next(value);
+      } catch (error) {
+        handleUnhandledError2(error);
+      }
+    }
+  }
+  error(err) {
+    const { partialObserver } = this;
+    if (partialObserver.error) {
+      try {
+        partialObserver.error(err);
+      } catch (error) {
+        handleUnhandledError2(error);
+      }
+    } else {
+      handleUnhandledError2(err);
+    }
+  }
+  complete() {
+    const { partialObserver } = this;
+    if (partialObserver.complete) {
+      try {
+        partialObserver.complete();
+      } catch (error) {
+        handleUnhandledError2(error);
+      }
+    }
+  }
+};
+var SafeSubscriber2 = class extends Subscriber2 {
+  constructor(observerOrNext, error, complete) {
+    super();
+    let partialObserver;
+    if (isFunction3(observerOrNext) || !observerOrNext) {
+      partialObserver = {
+        next: observerOrNext !== null && observerOrNext !== void 0 ? observerOrNext : void 0,
+        error: error !== null && error !== void 0 ? error : void 0,
+        complete: complete !== null && complete !== void 0 ? complete : void 0
+      };
+    } else {
+      let context3;
+      if (this && config2.useDeprecatedNextContext) {
+        context3 = Object.create(observerOrNext);
+        context3.unsubscribe = () => this.unsubscribe();
+        partialObserver = {
+          next: observerOrNext.next && bind2(observerOrNext.next, context3),
+          error: observerOrNext.error && bind2(observerOrNext.error, context3),
+          complete: observerOrNext.complete && bind2(observerOrNext.complete, context3)
+        };
+      } else {
+        partialObserver = observerOrNext;
+      }
+    }
+    this.destination = new ConsumerObserver2(partialObserver);
+  }
+};
+function handleUnhandledError2(error) {
+  if (config2.useDeprecatedSynchronousErrorHandling) {
+    captureError2(error);
+  } else {
+    reportUnhandledError2(error);
+  }
+}
+function defaultErrorHandler3(err) {
+  throw err;
+}
+function handleStoppedNotification2(notification, subscriber) {
+  const { onStoppedNotification } = config2;
+  onStoppedNotification && timeoutProvider2.setTimeout(() => onStoppedNotification(notification, subscriber));
+}
+var EMPTY_OBSERVER2 = {
+  closed: true,
+  next: noop4,
+  error: defaultErrorHandler3,
+  complete: noop4
+};
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/symbol/observable.js
+var observable2 = (() => typeof Symbol === "function" && Symbol.observable || "@@observable")();
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/identity.js
+function identity2(x) {
+  return x;
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/pipe.js
+function pipeFromArray2(fns) {
+  if (fns.length === 0) {
+    return identity2;
+  }
+  if (fns.length === 1) {
+    return fns[0];
+  }
+  return function piped(input2) {
+    return fns.reduce((prev, fn) => fn(prev), input2);
+  };
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/Observable.js
+var Observable2 = class _Observable {
+  constructor(subscribe) {
+    if (subscribe) {
+      this._subscribe = subscribe;
+    }
+  }
+  lift(operator) {
+    const observable3 = new _Observable();
+    observable3.source = this;
+    observable3.operator = operator;
+    return observable3;
+  }
+  subscribe(observerOrNext, error, complete) {
+    const subscriber = isSubscriber2(observerOrNext) ? observerOrNext : new SafeSubscriber2(observerOrNext, error, complete);
+    errorContext2(() => {
+      const { operator, source } = this;
+      subscriber.add(operator ? operator.call(subscriber, source) : source ? this._subscribe(subscriber) : this._trySubscribe(subscriber));
+    });
+    return subscriber;
+  }
+  _trySubscribe(sink) {
+    try {
+      return this._subscribe(sink);
+    } catch (err) {
+      sink.error(err);
+    }
+  }
+  forEach(next, promiseCtor) {
+    promiseCtor = getPromiseCtor2(promiseCtor);
+    return new promiseCtor((resolve, reject) => {
+      const subscriber = new SafeSubscriber2({
+        next: (value) => {
+          try {
+            next(value);
+          } catch (err) {
+            reject(err);
+            subscriber.unsubscribe();
+          }
+        },
+        error: reject,
+        complete: resolve
+      });
+      this.subscribe(subscriber);
+    });
+  }
+  _subscribe(subscriber) {
+    var _a;
+    return (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber);
+  }
+  [observable2]() {
+    return this;
+  }
+  pipe(...operations) {
+    return pipeFromArray2(operations)(this);
+  }
+  toPromise(promiseCtor) {
+    promiseCtor = getPromiseCtor2(promiseCtor);
+    return new promiseCtor((resolve, reject) => {
+      let value;
+      this.subscribe((x) => value = x, (err) => reject(err), () => resolve(value));
+    });
+  }
+};
+Observable2.create = (subscribe) => {
+  return new Observable2(subscribe);
+};
+function getPromiseCtor2(promiseCtor) {
+  var _a;
+  return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config2.Promise) !== null && _a !== void 0 ? _a : Promise;
+}
+function isObserver2(value) {
+  return value && isFunction3(value.next) && isFunction3(value.error) && isFunction3(value.complete);
+}
+function isSubscriber2(value) {
+  return value && value instanceof Subscriber2 || isObserver2(value) && isSubscription2(value);
+}
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/ObjectUnsubscribedError.js
+var ObjectUnsubscribedError2 = createErrorClass2((_super) => function ObjectUnsubscribedErrorImpl() {
+  _super(this);
+  this.name = "ObjectUnsubscribedError";
+  this.message = "object unsubscribed";
+});
+
+// ../editor-ui/node_modules/rxjs/dist/esm/internal/Subject.js
+var Subject2 = class extends Observable2 {
+  constructor() {
+    super();
+    this.closed = false;
+    this.currentObservers = null;
+    this.observers = [];
+    this.isStopped = false;
+    this.hasError = false;
+    this.thrownError = null;
+  }
+  lift(operator) {
+    const subject = new AnonymousSubject2(this, this);
+    subject.operator = operator;
+    return subject;
+  }
+  _throwIfClosed() {
+    if (this.closed) {
+      throw new ObjectUnsubscribedError2();
+    }
+  }
+  next(value) {
+    errorContext2(() => {
+      this._throwIfClosed();
+      if (!this.isStopped) {
+        if (!this.currentObservers) {
+          this.currentObservers = Array.from(this.observers);
+        }
+        for (const observer of this.currentObservers) {
+          observer.next(value);
+        }
+      }
+    });
+  }
+  error(err) {
+    errorContext2(() => {
+      this._throwIfClosed();
+      if (!this.isStopped) {
+        this.hasError = this.isStopped = true;
+        this.thrownError = err;
+        const { observers } = this;
+        while (observers.length) {
+          observers.shift().error(err);
+        }
+      }
+    });
+  }
+  complete() {
+    errorContext2(() => {
+      this._throwIfClosed();
+      if (!this.isStopped) {
+        this.isStopped = true;
+        const { observers } = this;
+        while (observers.length) {
+          observers.shift().complete();
+        }
+      }
+    });
+  }
+  unsubscribe() {
+    this.isStopped = this.closed = true;
+    this.observers = this.currentObservers = null;
+  }
+  get observed() {
+    var _a;
+    return ((_a = this.observers) === null || _a === void 0 ? void 0 : _a.length) > 0;
+  }
+  _trySubscribe(subscriber) {
+    this._throwIfClosed();
+    return super._trySubscribe(subscriber);
+  }
+  _subscribe(subscriber) {
+    this._throwIfClosed();
+    this._checkFinalizedStatuses(subscriber);
+    return this._innerSubscribe(subscriber);
+  }
+  _innerSubscribe(subscriber) {
+    const { hasError, isStopped, observers } = this;
+    if (hasError || isStopped) {
+      return EMPTY_SUBSCRIPTION2;
+    }
+    this.currentObservers = null;
+    observers.push(subscriber);
+    return new Subscription2(() => {
+      this.currentObservers = null;
+      arrRemove2(observers, subscriber);
+    });
+  }
+  _checkFinalizedStatuses(subscriber) {
+    const { hasError, thrownError, isStopped } = this;
+    if (hasError) {
+      subscriber.error(thrownError);
+    } else if (isStopped) {
+      subscriber.complete();
+    }
+  }
+  asObservable() {
+    const observable3 = new Observable2();
+    observable3.source = this;
+    return observable3;
+  }
+};
+Subject2.create = (destination, source) => {
+  return new AnonymousSubject2(destination, source);
+};
+var AnonymousSubject2 = class extends Subject2 {
+  constructor(destination, source) {
+    super();
+    this.destination = destination;
+    this.source = source;
+  }
+  next(value) {
+    var _a, _b;
+    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.next) === null || _b === void 0 ? void 0 : _b.call(_a, value);
+  }
+  error(err) {
+    var _a, _b;
+    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.error) === null || _b === void 0 ? void 0 : _b.call(_a, err);
+  }
+  complete() {
+    var _a, _b;
+    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.complete) === null || _b === void 0 ? void 0 : _b.call(_a);
+  }
+  _subscribe(subscriber) {
+    var _a, _b;
+    return (_b = (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber)) !== null && _b !== void 0 ? _b : EMPTY_SUBSCRIPTION2;
+  }
+};
+
+// ../editor-ui/src/app/player/model/game-object.ts
+var GameObject = class {
+  constructor() {
+    this.updateSubject = new Subject2();
+    this.location = { x: 0, y: 0 };
+    this.zIndex = 0;
+  }
+  get size() {
+    return { height: 0, width: 0 };
+  }
+  getRect() {
+    return new Rectangle(this.location.x, this.location.y, this.location.x + this.size.width, this.location.y + this.size.height);
+  }
+  onUpdate() {
+    return __async(this, null, function* () {
+      this.updateSubject.next();
+    });
+  }
+  onUpdateEvent() {
+    return new Promise((resolve) => {
+      const subscription = this.updateSubject.subscribe(() => {
+        subscription.unsubscribe();
+        resolve();
+      });
+    });
+  }
+};
+var Rectangle = class {
+  constructor(x1, y1, x2, y2) {
+    this.x1 = x1;
+    this.y1 = y1;
+    this.x2 = x2;
+    this.y2 = y2;
+  }
+  containsPoint(x, y) {
+    return x >= this.x1 && x <= this.x2 && y >= this.y1 && y <= this.y2;
+  }
+};
+
+// ../editor-ui/src/app/player/model/rf-character.ts
+var RFCharacter = class extends GameObject {
+  get size() {
+    const img = this.activeSprite?.getImage() || new Image();
+    return {
+      height: img.naturalHeight,
+      width: img.naturalWidth
+    };
+  }
+  constructor(name) {
+    super();
+    this.type = "Character";
+    this.portraits = /* @__PURE__ */ new Map();
+    this.sprites = /* @__PURE__ */ new Map();
+    this.visible = true;
+    this.flipped = false;
+    this.opacity = 1;
+    this.showShadow = true;
+    this.name = name;
+  }
+  setActiveSprite(sprite) {
+    this.activeSprite = this.sprites.get(sprite);
+  }
+  playSprite(sprite, loop = false, animate2 = true) {
+    return __async(this, null, function* () {
+      this.setActiveSprite(sprite);
+      if (!this.activeSprite)
+        return;
+      if (!animate2 || this.activeSprite.images.length < 1 || this.activeSprite.fps === 0) {
+        this.activeSprite.imageIndex = this.activeSprite.images.length - 1;
+        return;
+      }
+      this.activeSprite.play(loop);
+      while (this.activeSprite.playing) {
+        yield this.onUpdateEvent();
+      }
+    });
+  }
+  fadeOut() {
+    return __async(this, null, function* () {
+      return fadeOut(this);
+    });
+  }
+  fadeIn() {
+    return __async(this, null, function* () {
+      return fadeIn(this);
+    });
+  }
+  onRender(ctx, offset = { x: 0, y: 0 }) {
+    if (!ctx || !this.activeSprite || !this.visible)
+      return Promise.resolve();
+    if (this.showShadow) {
+      const img = this.activeSprite.getImage();
+      const cx = this.location.x + img.naturalWidth / 2;
+      const cy = this.location.y + img.naturalHeight;
+      drawShadow(ctx, cx + offset.x, cy + offset.y, img.naturalWidth / 3, img.naturalHeight / 12, 0.1);
+    }
+    const ogAlpha = ctx.globalAlpha;
+    ctx.globalAlpha = this.opacity;
+    if (this.flipped) {
+      drawFlippedImage(this.activeSprite.getImage(), this.location.x + offset.x, this.location.y + offset.y, ctx);
+    } else {
+      ctx.drawImage(this.activeSprite.getImage(), this.location.x + offset.x, this.location.y + offset.y);
+    }
+    ctx.globalAlpha = ogAlpha;
+    return Promise.resolve();
+  }
+  get spriteList() {
+    return [...this.sprites.keys()];
+  }
+  get portraitList() {
+    return [...this.portraits.keys()];
+  }
+};
+
 // ../editor-ui/src/app/player/model/vnevent.ts
 var VNEvent = class {
   constructor() {
@@ -36154,11 +36884,13 @@ var SpritePlayEvent = class extends VNEvent {
   }
   execute(scene, animate2 = true) {
     return __async(this, null, function* () {
-      const target = scene.characters.get(this.target);
+      const target = scene.characters.get(this.target) ?? scene.props.get(this.target);
       if (target) {
         const spriteName = this.properties.name || "";
         target.flipped = this.properties.flip;
-        target.showShadow = this.properties.shadow;
+        if (target instanceof RFCharacter) {
+          target.showShadow = this.properties.shadow;
+        }
         yield target?.playSprite(spriteName, this.properties.loop, animate2);
         console.log(`set ${spriteName} to active sprite for ${target?.name}`);
       }
@@ -36290,7 +37022,8 @@ var SceneOverlayShowEvent = class extends VNEvent {
       if (this.properties.image) {
         prop = scene.props.get(this.properties.image);
         if (prop) {
-          scene.overlay.image = prop.sprites.get("default") || prop.sprites.entries().next().value[1];
+          const firstSpriteEntry = prop.sprites.entries().next().value;
+          scene.overlay.image = prop.sprites.get("default") || (firstSpriteEntry ? firstSpriteEntry[1] : void 0);
           scene.overlay.image?.play(true);
         }
       }
@@ -47683,736 +48416,6 @@ var RFArea = class {
     this.mask.play(true);
     this.foreground.play(true);
     this.backdrop.play(true);
-  }
-};
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/isFunction.js
-function isFunction3(value) {
-  return typeof value === "function";
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/createErrorClass.js
-function createErrorClass2(createImpl) {
-  const _super = (instance) => {
-    Error.call(instance);
-    instance.stack = new Error().stack;
-  };
-  const ctorFunc = createImpl(_super);
-  ctorFunc.prototype = Object.create(Error.prototype);
-  ctorFunc.prototype.constructor = ctorFunc;
-  return ctorFunc;
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/UnsubscriptionError.js
-var UnsubscriptionError2 = createErrorClass2((_super) => function UnsubscriptionErrorImpl(errors) {
-  _super(this);
-  this.message = errors ? `${errors.length} errors occurred during unsubscription:
-${errors.map((err, i) => `${i + 1}) ${err.toString()}`).join("\n  ")}` : "";
-  this.name = "UnsubscriptionError";
-  this.errors = errors;
-});
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/arrRemove.js
-function arrRemove2(arr, item) {
-  if (arr) {
-    const index = arr.indexOf(item);
-    0 <= index && arr.splice(index, 1);
-  }
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/Subscription.js
-var Subscription2 = class _Subscription {
-  constructor(initialTeardown) {
-    this.initialTeardown = initialTeardown;
-    this.closed = false;
-    this._parentage = null;
-    this._finalizers = null;
-  }
-  unsubscribe() {
-    let errors;
-    if (!this.closed) {
-      this.closed = true;
-      const { _parentage } = this;
-      if (_parentage) {
-        this._parentage = null;
-        if (Array.isArray(_parentage)) {
-          for (const parent of _parentage) {
-            parent.remove(this);
-          }
-        } else {
-          _parentage.remove(this);
-        }
-      }
-      const { initialTeardown: initialFinalizer } = this;
-      if (isFunction3(initialFinalizer)) {
-        try {
-          initialFinalizer();
-        } catch (e) {
-          errors = e instanceof UnsubscriptionError2 ? e.errors : [e];
-        }
-      }
-      const { _finalizers } = this;
-      if (_finalizers) {
-        this._finalizers = null;
-        for (const finalizer of _finalizers) {
-          try {
-            execFinalizer2(finalizer);
-          } catch (err) {
-            errors = errors !== null && errors !== void 0 ? errors : [];
-            if (err instanceof UnsubscriptionError2) {
-              errors = [...errors, ...err.errors];
-            } else {
-              errors.push(err);
-            }
-          }
-        }
-      }
-      if (errors) {
-        throw new UnsubscriptionError2(errors);
-      }
-    }
-  }
-  add(teardown) {
-    var _a;
-    if (teardown && teardown !== this) {
-      if (this.closed) {
-        execFinalizer2(teardown);
-      } else {
-        if (teardown instanceof _Subscription) {
-          if (teardown.closed || teardown._hasParent(this)) {
-            return;
-          }
-          teardown._addParent(this);
-        }
-        (this._finalizers = (_a = this._finalizers) !== null && _a !== void 0 ? _a : []).push(teardown);
-      }
-    }
-  }
-  _hasParent(parent) {
-    const { _parentage } = this;
-    return _parentage === parent || Array.isArray(_parentage) && _parentage.includes(parent);
-  }
-  _addParent(parent) {
-    const { _parentage } = this;
-    this._parentage = Array.isArray(_parentage) ? (_parentage.push(parent), _parentage) : _parentage ? [_parentage, parent] : parent;
-  }
-  _removeParent(parent) {
-    const { _parentage } = this;
-    if (_parentage === parent) {
-      this._parentage = null;
-    } else if (Array.isArray(_parentage)) {
-      arrRemove2(_parentage, parent);
-    }
-  }
-  remove(teardown) {
-    const { _finalizers } = this;
-    _finalizers && arrRemove2(_finalizers, teardown);
-    if (teardown instanceof _Subscription) {
-      teardown._removeParent(this);
-    }
-  }
-};
-Subscription2.EMPTY = (() => {
-  const empty = new Subscription2();
-  empty.closed = true;
-  return empty;
-})();
-var EMPTY_SUBSCRIPTION2 = Subscription2.EMPTY;
-function isSubscription2(value) {
-  return value instanceof Subscription2 || value && "closed" in value && isFunction3(value.remove) && isFunction3(value.add) && isFunction3(value.unsubscribe);
-}
-function execFinalizer2(finalizer) {
-  if (isFunction3(finalizer)) {
-    finalizer();
-  } else {
-    finalizer.unsubscribe();
-  }
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/config.js
-var config2 = {
-  onUnhandledError: null,
-  onStoppedNotification: null,
-  Promise: void 0,
-  useDeprecatedSynchronousErrorHandling: false,
-  useDeprecatedNextContext: false
-};
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/scheduler/timeoutProvider.js
-var timeoutProvider2 = {
-  setTimeout(handler, timeout, ...args) {
-    const { delegate } = timeoutProvider2;
-    if (delegate === null || delegate === void 0 ? void 0 : delegate.setTimeout) {
-      return delegate.setTimeout(handler, timeout, ...args);
-    }
-    return setTimeout(handler, timeout, ...args);
-  },
-  clearTimeout(handle) {
-    const { delegate } = timeoutProvider2;
-    return ((delegate === null || delegate === void 0 ? void 0 : delegate.clearTimeout) || clearTimeout)(handle);
-  },
-  delegate: void 0
-};
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/reportUnhandledError.js
-function reportUnhandledError2(err) {
-  timeoutProvider2.setTimeout(() => {
-    const { onUnhandledError } = config2;
-    if (onUnhandledError) {
-      onUnhandledError(err);
-    } else {
-      throw err;
-    }
-  });
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/noop.js
-function noop4() {
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/NotificationFactories.js
-var COMPLETE_NOTIFICATION2 = (() => createNotification2("C", void 0, void 0))();
-function errorNotification2(error) {
-  return createNotification2("E", void 0, error);
-}
-function nextNotification2(value) {
-  return createNotification2("N", value, void 0);
-}
-function createNotification2(kind, value, error) {
-  return {
-    kind,
-    value,
-    error
-  };
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/errorContext.js
-var context2 = null;
-function errorContext2(cb) {
-  if (config2.useDeprecatedSynchronousErrorHandling) {
-    const isRoot = !context2;
-    if (isRoot) {
-      context2 = { errorThrown: false, error: null };
-    }
-    cb();
-    if (isRoot) {
-      const { errorThrown, error } = context2;
-      context2 = null;
-      if (errorThrown) {
-        throw error;
-      }
-    }
-  } else {
-    cb();
-  }
-}
-function captureError2(err) {
-  if (config2.useDeprecatedSynchronousErrorHandling && context2) {
-    context2.errorThrown = true;
-    context2.error = err;
-  }
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/Subscriber.js
-var Subscriber2 = class extends Subscription2 {
-  constructor(destination) {
-    super();
-    this.isStopped = false;
-    if (destination) {
-      this.destination = destination;
-      if (isSubscription2(destination)) {
-        destination.add(this);
-      }
-    } else {
-      this.destination = EMPTY_OBSERVER2;
-    }
-  }
-  static create(next, error, complete) {
-    return new SafeSubscriber2(next, error, complete);
-  }
-  next(value) {
-    if (this.isStopped) {
-      handleStoppedNotification2(nextNotification2(value), this);
-    } else {
-      this._next(value);
-    }
-  }
-  error(err) {
-    if (this.isStopped) {
-      handleStoppedNotification2(errorNotification2(err), this);
-    } else {
-      this.isStopped = true;
-      this._error(err);
-    }
-  }
-  complete() {
-    if (this.isStopped) {
-      handleStoppedNotification2(COMPLETE_NOTIFICATION2, this);
-    } else {
-      this.isStopped = true;
-      this._complete();
-    }
-  }
-  unsubscribe() {
-    if (!this.closed) {
-      this.isStopped = true;
-      super.unsubscribe();
-      this.destination = null;
-    }
-  }
-  _next(value) {
-    this.destination.next(value);
-  }
-  _error(err) {
-    try {
-      this.destination.error(err);
-    } finally {
-      this.unsubscribe();
-    }
-  }
-  _complete() {
-    try {
-      this.destination.complete();
-    } finally {
-      this.unsubscribe();
-    }
-  }
-};
-var _bind2 = Function.prototype.bind;
-function bind2(fn, thisArg) {
-  return _bind2.call(fn, thisArg);
-}
-var ConsumerObserver2 = class {
-  constructor(partialObserver) {
-    this.partialObserver = partialObserver;
-  }
-  next(value) {
-    const { partialObserver } = this;
-    if (partialObserver.next) {
-      try {
-        partialObserver.next(value);
-      } catch (error) {
-        handleUnhandledError2(error);
-      }
-    }
-  }
-  error(err) {
-    const { partialObserver } = this;
-    if (partialObserver.error) {
-      try {
-        partialObserver.error(err);
-      } catch (error) {
-        handleUnhandledError2(error);
-      }
-    } else {
-      handleUnhandledError2(err);
-    }
-  }
-  complete() {
-    const { partialObserver } = this;
-    if (partialObserver.complete) {
-      try {
-        partialObserver.complete();
-      } catch (error) {
-        handleUnhandledError2(error);
-      }
-    }
-  }
-};
-var SafeSubscriber2 = class extends Subscriber2 {
-  constructor(observerOrNext, error, complete) {
-    super();
-    let partialObserver;
-    if (isFunction3(observerOrNext) || !observerOrNext) {
-      partialObserver = {
-        next: observerOrNext !== null && observerOrNext !== void 0 ? observerOrNext : void 0,
-        error: error !== null && error !== void 0 ? error : void 0,
-        complete: complete !== null && complete !== void 0 ? complete : void 0
-      };
-    } else {
-      let context3;
-      if (this && config2.useDeprecatedNextContext) {
-        context3 = Object.create(observerOrNext);
-        context3.unsubscribe = () => this.unsubscribe();
-        partialObserver = {
-          next: observerOrNext.next && bind2(observerOrNext.next, context3),
-          error: observerOrNext.error && bind2(observerOrNext.error, context3),
-          complete: observerOrNext.complete && bind2(observerOrNext.complete, context3)
-        };
-      } else {
-        partialObserver = observerOrNext;
-      }
-    }
-    this.destination = new ConsumerObserver2(partialObserver);
-  }
-};
-function handleUnhandledError2(error) {
-  if (config2.useDeprecatedSynchronousErrorHandling) {
-    captureError2(error);
-  } else {
-    reportUnhandledError2(error);
-  }
-}
-function defaultErrorHandler3(err) {
-  throw err;
-}
-function handleStoppedNotification2(notification, subscriber) {
-  const { onStoppedNotification } = config2;
-  onStoppedNotification && timeoutProvider2.setTimeout(() => onStoppedNotification(notification, subscriber));
-}
-var EMPTY_OBSERVER2 = {
-  closed: true,
-  next: noop4,
-  error: defaultErrorHandler3,
-  complete: noop4
-};
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/symbol/observable.js
-var observable2 = (() => typeof Symbol === "function" && Symbol.observable || "@@observable")();
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/identity.js
-function identity2(x) {
-  return x;
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/pipe.js
-function pipeFromArray2(fns) {
-  if (fns.length === 0) {
-    return identity2;
-  }
-  if (fns.length === 1) {
-    return fns[0];
-  }
-  return function piped(input2) {
-    return fns.reduce((prev, fn) => fn(prev), input2);
-  };
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/Observable.js
-var Observable2 = class _Observable {
-  constructor(subscribe) {
-    if (subscribe) {
-      this._subscribe = subscribe;
-    }
-  }
-  lift(operator) {
-    const observable3 = new _Observable();
-    observable3.source = this;
-    observable3.operator = operator;
-    return observable3;
-  }
-  subscribe(observerOrNext, error, complete) {
-    const subscriber = isSubscriber2(observerOrNext) ? observerOrNext : new SafeSubscriber2(observerOrNext, error, complete);
-    errorContext2(() => {
-      const { operator, source } = this;
-      subscriber.add(operator ? operator.call(subscriber, source) : source ? this._subscribe(subscriber) : this._trySubscribe(subscriber));
-    });
-    return subscriber;
-  }
-  _trySubscribe(sink) {
-    try {
-      return this._subscribe(sink);
-    } catch (err) {
-      sink.error(err);
-    }
-  }
-  forEach(next, promiseCtor) {
-    promiseCtor = getPromiseCtor2(promiseCtor);
-    return new promiseCtor((resolve, reject) => {
-      const subscriber = new SafeSubscriber2({
-        next: (value) => {
-          try {
-            next(value);
-          } catch (err) {
-            reject(err);
-            subscriber.unsubscribe();
-          }
-        },
-        error: reject,
-        complete: resolve
-      });
-      this.subscribe(subscriber);
-    });
-  }
-  _subscribe(subscriber) {
-    var _a;
-    return (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber);
-  }
-  [observable2]() {
-    return this;
-  }
-  pipe(...operations) {
-    return pipeFromArray2(operations)(this);
-  }
-  toPromise(promiseCtor) {
-    promiseCtor = getPromiseCtor2(promiseCtor);
-    return new promiseCtor((resolve, reject) => {
-      let value;
-      this.subscribe((x) => value = x, (err) => reject(err), () => resolve(value));
-    });
-  }
-};
-Observable2.create = (subscribe) => {
-  return new Observable2(subscribe);
-};
-function getPromiseCtor2(promiseCtor) {
-  var _a;
-  return (_a = promiseCtor !== null && promiseCtor !== void 0 ? promiseCtor : config2.Promise) !== null && _a !== void 0 ? _a : Promise;
-}
-function isObserver2(value) {
-  return value && isFunction3(value.next) && isFunction3(value.error) && isFunction3(value.complete);
-}
-function isSubscriber2(value) {
-  return value && value instanceof Subscriber2 || isObserver2(value) && isSubscription2(value);
-}
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/util/ObjectUnsubscribedError.js
-var ObjectUnsubscribedError2 = createErrorClass2((_super) => function ObjectUnsubscribedErrorImpl() {
-  _super(this);
-  this.name = "ObjectUnsubscribedError";
-  this.message = "object unsubscribed";
-});
-
-// ../editor-ui/node_modules/rxjs/dist/esm/internal/Subject.js
-var Subject2 = class extends Observable2 {
-  constructor() {
-    super();
-    this.closed = false;
-    this.currentObservers = null;
-    this.observers = [];
-    this.isStopped = false;
-    this.hasError = false;
-    this.thrownError = null;
-  }
-  lift(operator) {
-    const subject = new AnonymousSubject2(this, this);
-    subject.operator = operator;
-    return subject;
-  }
-  _throwIfClosed() {
-    if (this.closed) {
-      throw new ObjectUnsubscribedError2();
-    }
-  }
-  next(value) {
-    errorContext2(() => {
-      this._throwIfClosed();
-      if (!this.isStopped) {
-        if (!this.currentObservers) {
-          this.currentObservers = Array.from(this.observers);
-        }
-        for (const observer of this.currentObservers) {
-          observer.next(value);
-        }
-      }
-    });
-  }
-  error(err) {
-    errorContext2(() => {
-      this._throwIfClosed();
-      if (!this.isStopped) {
-        this.hasError = this.isStopped = true;
-        this.thrownError = err;
-        const { observers } = this;
-        while (observers.length) {
-          observers.shift().error(err);
-        }
-      }
-    });
-  }
-  complete() {
-    errorContext2(() => {
-      this._throwIfClosed();
-      if (!this.isStopped) {
-        this.isStopped = true;
-        const { observers } = this;
-        while (observers.length) {
-          observers.shift().complete();
-        }
-      }
-    });
-  }
-  unsubscribe() {
-    this.isStopped = this.closed = true;
-    this.observers = this.currentObservers = null;
-  }
-  get observed() {
-    var _a;
-    return ((_a = this.observers) === null || _a === void 0 ? void 0 : _a.length) > 0;
-  }
-  _trySubscribe(subscriber) {
-    this._throwIfClosed();
-    return super._trySubscribe(subscriber);
-  }
-  _subscribe(subscriber) {
-    this._throwIfClosed();
-    this._checkFinalizedStatuses(subscriber);
-    return this._innerSubscribe(subscriber);
-  }
-  _innerSubscribe(subscriber) {
-    const { hasError, isStopped, observers } = this;
-    if (hasError || isStopped) {
-      return EMPTY_SUBSCRIPTION2;
-    }
-    this.currentObservers = null;
-    observers.push(subscriber);
-    return new Subscription2(() => {
-      this.currentObservers = null;
-      arrRemove2(observers, subscriber);
-    });
-  }
-  _checkFinalizedStatuses(subscriber) {
-    const { hasError, thrownError, isStopped } = this;
-    if (hasError) {
-      subscriber.error(thrownError);
-    } else if (isStopped) {
-      subscriber.complete();
-    }
-  }
-  asObservable() {
-    const observable3 = new Observable2();
-    observable3.source = this;
-    return observable3;
-  }
-};
-Subject2.create = (destination, source) => {
-  return new AnonymousSubject2(destination, source);
-};
-var AnonymousSubject2 = class extends Subject2 {
-  constructor(destination, source) {
-    super();
-    this.destination = destination;
-    this.source = source;
-  }
-  next(value) {
-    var _a, _b;
-    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.next) === null || _b === void 0 ? void 0 : _b.call(_a, value);
-  }
-  error(err) {
-    var _a, _b;
-    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.error) === null || _b === void 0 ? void 0 : _b.call(_a, err);
-  }
-  complete() {
-    var _a, _b;
-    (_b = (_a = this.destination) === null || _a === void 0 ? void 0 : _a.complete) === null || _b === void 0 ? void 0 : _b.call(_a);
-  }
-  _subscribe(subscriber) {
-    var _a, _b;
-    return (_b = (_a = this.source) === null || _a === void 0 ? void 0 : _a.subscribe(subscriber)) !== null && _b !== void 0 ? _b : EMPTY_SUBSCRIPTION2;
-  }
-};
-
-// ../editor-ui/src/app/player/model/game-object.ts
-var GameObject = class {
-  constructor() {
-    this.updateSubject = new Subject2();
-    this.location = { x: 0, y: 0 };
-    this.zIndex = 0;
-  }
-  get size() {
-    return { height: 0, width: 0 };
-  }
-  getRect() {
-    return new Rectangle(this.location.x, this.location.y, this.location.x + this.size.width, this.location.y + this.size.height);
-  }
-  onUpdate() {
-    return __async(this, null, function* () {
-      this.updateSubject.next();
-    });
-  }
-  onUpdateEvent() {
-    return new Promise((resolve) => {
-      const subscription = this.updateSubject.subscribe(() => {
-        subscription.unsubscribe();
-        resolve();
-      });
-    });
-  }
-};
-var Rectangle = class {
-  constructor(x1, y1, x2, y2) {
-    this.x1 = x1;
-    this.y1 = y1;
-    this.x2 = x2;
-    this.y2 = y2;
-  }
-  containsPoint(x, y) {
-    return x >= this.x1 && x <= this.x2 && y >= this.y1 && y <= this.y2;
-  }
-};
-
-// ../editor-ui/src/app/player/model/rf-character.ts
-var RFCharacter = class extends GameObject {
-  get size() {
-    const img = this.activeSprite?.getImage() || new Image();
-    return {
-      height: img.naturalHeight,
-      width: img.naturalWidth
-    };
-  }
-  constructor(name) {
-    super();
-    this.type = "Character";
-    this.portraits = /* @__PURE__ */ new Map();
-    this.sprites = /* @__PURE__ */ new Map();
-    this.visible = true;
-    this.flipped = false;
-    this.opacity = 1;
-    this.showShadow = true;
-    this.name = name;
-  }
-  setActiveSprite(sprite) {
-    this.activeSprite = this.sprites.get(sprite);
-  }
-  playSprite(sprite, loop = false, animate2 = true) {
-    return __async(this, null, function* () {
-      this.setActiveSprite(sprite);
-      if (!this.activeSprite)
-        return;
-      if (!animate2 || this.activeSprite.images.length < 1 || this.activeSprite.fps === 0) {
-        this.activeSprite.imageIndex = this.activeSprite.images.length - 1;
-        return;
-      }
-      this.activeSprite.play(loop);
-      while (this.activeSprite.playing) {
-        yield this.onUpdateEvent();
-      }
-    });
-  }
-  fadeOut() {
-    return __async(this, null, function* () {
-      return fadeOut(this);
-    });
-  }
-  fadeIn() {
-    return __async(this, null, function* () {
-      return fadeIn(this);
-    });
-  }
-  onRender(ctx, offset = { x: 0, y: 0 }) {
-    if (!ctx || !this.activeSprite || !this.visible)
-      return Promise.resolve();
-    if (this.showShadow) {
-      const img = this.activeSprite.getImage();
-      const cx = this.location.x + img.naturalWidth / 2;
-      const cy = this.location.y + img.naturalHeight;
-      drawShadow(ctx, cx + offset.x, cy + offset.y, img.naturalWidth / 3, img.naturalHeight / 12, 0.1);
-    }
-    const ogAlpha = ctx.globalAlpha;
-    ctx.globalAlpha = this.opacity;
-    if (this.flipped) {
-      drawFlippedImage(this.activeSprite.getImage(), this.location.x + offset.x, this.location.y + offset.y, ctx);
-    } else {
-      ctx.drawImage(this.activeSprite.getImage(), this.location.x + offset.x, this.location.y + offset.y);
-    }
-    ctx.globalAlpha = ogAlpha;
-    return Promise.resolve();
-  }
-  get spriteList() {
-    return [...this.sprites.keys()];
-  }
-  get portraitList() {
-    return [...this.portraits.keys()];
   }
 };
 
